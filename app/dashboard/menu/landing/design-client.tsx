@@ -310,14 +310,14 @@ export function DesignClient({
         <div className="w-full">
           <div className="mb-4">
             <div
-              className="relative flex h-28 w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-light to-primary/20 bg-cover bg-center md:h-36"
+              className="relative z-0 flex h-28 w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-light to-primary/20 bg-cover bg-center md:h-36"
               style={banner ? { backgroundImage: `url(${banner})` } : undefined}
             >
               <BannerUploader banner={banner} onChange={handleBannerChange} />
             </div>
-            <div className="-mt-10 flex items-end gap-3 px-4">
-              <div className="relative h-24 w-32 shrink-0">
-                <div className="flex h-24 w-32 items-center justify-center overflow-hidden rounded-lg border-4 border-background bg-surface shadow-sm">
+            <div className="-mt-16 flex items-end gap-3 px-4">
+              <div className="relative z-10 h-32 w-40 shrink-0">
+                <div className="flex h-32 w-40 items-center justify-center overflow-hidden rounded-lg border-4 border-background bg-surface shadow-sm">
                   {logoPreview || restaurantLogo ? (
                     <img src={logoPreview ?? restaurantLogo!} alt={restaurantName} className="h-full w-full object-cover" />
                   ) : (
