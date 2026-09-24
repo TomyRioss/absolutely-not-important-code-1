@@ -64,7 +64,10 @@ export function TiendaPuntosClient({
   const pinFeatured = (list: Category[]) =>
     [...list].sort((a, b) => Number(b.isFeatured) - Number(a.isFeatured));
   const [categories, setCategories] = useState(pinFeatured(initialCategories));
-  useEffect(() => setCategories(pinFeatured(initialCategories)), [initialCategories]);
+  useEffect(() => {
+    const id = setTimeout(() => setCategories(pinFeatured(initialCategories)), 0);
+    return () => clearTimeout(id);
+  }, [initialCategories]);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [collapsedCategoryIds, setCollapsedCategoryIds] = useState<Set<string>>(new Set());
   const [isReordering, setIsReordering] = useState(false);

@@ -44,7 +44,10 @@ export function SidebarNav({ onboarding }: { onboarding?: OnboardingProgress | n
   useEffect(() => {
     try {
       const stored = localStorage.getItem("dashboard-open-groups");
-      if (stored) setOpenGroups((prev) => new Set([...prev, ...JSON.parse(stored)]));
+      if (stored) {
+        const id = setTimeout(() => setOpenGroups((prev) => new Set([...prev, ...JSON.parse(stored)])), 0);
+        return () => clearTimeout(id);
+      }
     } catch (err) {
       console.error("[SidebarNav] failed to read stored state", err);
     }

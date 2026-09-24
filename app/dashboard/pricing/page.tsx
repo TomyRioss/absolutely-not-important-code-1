@@ -7,6 +7,8 @@ import { SiMercadopago } from "react-icons/si";
 import { subscribeToPro } from "./actions";
 import { PromoCountdown } from "@/components/promo-countdown";
 
+const currentTime = () => Date.now();
+
 export default async function PricingPage() {
   const session = await auth();
 
@@ -22,7 +24,7 @@ export default async function PricingPage() {
 
   let trialDaysLeft: number | null = null;
   if (business?.trialEndsAt) {
-    const diff = new Date(business.trialEndsAt).getTime() - Date.now();
+    const diff = new Date(business.trialEndsAt).getTime() - currentTime();
     trialDaysLeft = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   }
 

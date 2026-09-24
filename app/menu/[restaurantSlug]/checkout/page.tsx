@@ -28,7 +28,8 @@ export default function CheckoutPage() {
   const [success, setSuccess] = useState<{ result: Extract<CheckoutResult, { ok: true }>; whatsappUrl: string | null } | null>(null);
 
   useEffect(() => {
-    setCart(getCart());
+    const id = setTimeout(() => setCart(getCart()), 0);
+    return () => clearTimeout(id);
   }, []);
 
   function goBack() {

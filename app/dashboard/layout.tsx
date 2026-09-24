@@ -16,6 +16,8 @@ import { Separator } from "@/components/ui/separator";
 import { prisma } from "@/lib/prisma";
 import { getOnboardingProgress } from "@/lib/onboarding";
 
+const currentTime = () => Date.now();
+
 export default async function AdminLayout({
   children,
 }: {
@@ -39,7 +41,7 @@ export default async function AdminLayout({
 
   let trialDaysLeft: number | null = null;
   if (!isPro && business?.trialEndsAt) {
-    const diff = new Date(business.trialEndsAt).getTime() - Date.now();
+    const diff = new Date(business.trialEndsAt).getTime() - currentTime();
     trialDaysLeft = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   }
 

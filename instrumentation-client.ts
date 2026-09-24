@@ -1,7 +1,6 @@
 import posthog from "posthog-js";
 
 const token = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
-const host = process.env.NEXT_PUBLIC_POSTHOG_HOST;
 const isLocalhost = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
 
 if (isLocalhost) {

@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useEffect, useState } from "react";
 import { Plus, X, GripVertical, Trash2, ChevronDown, ChevronUp, Sparkles, Loader2, RotateCcw, Info, Download } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -280,19 +282,22 @@ export function RewardDrawer({
 
   useEffect(() => {
     if (!state) return;
-    if (state.mode === "edit") {
-      setName(state.reward.name);
-      setDescription(state.reward.description ?? "");
-      const variants = state.reward.variants.length > 0 ? state.reward.variants : undefined;
-      setRows(variants ? variants.map((v) => rowFromVariant(v)) : [rowFromVariant()]);
-      setPriceMode(variants && variants.length > 1 ? "variants" : "simple");
-    } else {
-      setName("");
-      setDescription("");
-      setRows([rowFromVariant()]);
-      setPriceMode("simple");
-    }
-    setPendingImage(null);
+    const id = setTimeout(() => {
+      if (state.mode === "edit") {
+        setName(state.reward.name);
+        setDescription(state.reward.description ?? "");
+        const variants = state.reward.variants.length > 0 ? state.reward.variants : undefined;
+        setRows(variants ? variants.map((v) => rowFromVariant(v)) : [rowFromVariant()]);
+        setPriceMode(variants && variants.length > 1 ? "variants" : "simple");
+      } else {
+        setName("");
+        setDescription("");
+        setRows([rowFromVariant()]);
+        setPriceMode("simple");
+      }
+      setPendingImage(null);
+    }, 0);
+    return () => clearTimeout(id);
     setImportedImageUrl(null);
   }, [state]);
 
@@ -424,7 +429,8 @@ export function RewardDrawer({
               image={state?.mode === "edit" ? state.reward.imageUrl : (importedImageUrl ?? pendingImage)}
               onChange={(dataUrl) => {
                 setImportedImageUrl(null);
-                state?.mode === "edit" ? onImageChange(state.reward.id, dataUrl) : setPendingImage(dataUrl);
+                if (state?.mode === "edit") onImageChange(state.reward.id, dataUrl);
+                else setPendingImage(dataUrl);
               }}
             />
             <div className="flex-1 space-y-2">
@@ -616,7 +622,7 @@ export function RewardDrawer({
                       className="flex w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-surface"
                     >
                       <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-background">
-                        {product.imageUrl && <img src={product.imageUrl} alt="" className="h-full w-full object-cover" />}
+                        {product.imageUrl && <Image src={product.imageUrl} alt="" fill unoptimized className="object-cover" />}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-text-primary">{product.name}</p>

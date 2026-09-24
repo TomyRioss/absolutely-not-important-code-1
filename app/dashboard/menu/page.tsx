@@ -3,6 +3,8 @@ import { ensureFeaturedCategory } from "@/lib/featured-category";
 import { requireBusinessId } from "@/lib/tenant";
 import { MenuClient } from "./menu-client";
 
+const currentTime = () => Date.now();
+
 export const dynamic = "force-dynamic";
 
 export default async function MenuPage() {
@@ -44,7 +46,7 @@ export default async function MenuPage() {
   });
 
   const isPro = restaurant.business.plan === "pro";
-  const trialExpired = !!restaurant.business.trialEndsAt && restaurant.business.trialEndsAt.getTime() < Date.now();
+  const trialExpired = !!restaurant.business.trialEndsAt && restaurant.business.trialEndsAt.getTime() < currentTime();
   const readOnly = !isPro && trialExpired;
 
   return (

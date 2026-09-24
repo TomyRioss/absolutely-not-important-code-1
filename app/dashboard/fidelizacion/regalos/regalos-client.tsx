@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useState, useTransition } from "react";
 import { Plus, Eye, EyeOff, Pencil, Trash2, Gift } from "lucide-react";
 import { ProductImageUploader } from "@/app/dashboard/menu/product-image-uploader";
@@ -154,7 +156,7 @@ export function RegalosClient({ businessId, rewards: initialRewards }: { busines
               <div className="flex min-w-0 flex-1 items-center gap-3 rounded-lg bg-background p-3 ring-1 ring-border">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-surface">
                   {reward.imageUrl ? (
-                    <img src={reward.imageUrl} alt="" className="h-full w-full object-cover" />
+                    <Image src={reward.imageUrl} alt="" fill unoptimized className="object-cover" />
                   ) : (
                     <Gift className="h-5 w-5 text-text-secondary" />
                   )}

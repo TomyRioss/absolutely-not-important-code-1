@@ -48,7 +48,7 @@ export default async function AdminHome() {
               <CardTitle>QR Menú Digital</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col items-center gap-3">
-              <img src={qrPreviewUrl} alt="QR del menú digital" className="h-32 w-32" />
+              <Image src={qrPreviewUrl} alt="QR del menú digital" width={128} height={128} unoptimized className="h-32 w-32" />
               <div className="flex w-full items-center rounded-lg border border-border">
                 <div className="flex w-[30%] shrink-0">
                   <QrDownloadButton menuUrl={menuUrl} slug={restaurant.slug} label="Descargar QR" />
@@ -69,3 +69,4 @@ export default async function AdminHome() {
     </div>
   );
 }
+import Image from "next/image";

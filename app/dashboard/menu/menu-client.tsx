@@ -1,5 +1,8 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
+
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Separator } from "@/components/ui/separator";
 import { useRouter } from "next/navigation";
@@ -80,7 +83,10 @@ export function MenuClient({
   const pinFeatured = (list: Category[]) =>
     [...list].sort((a, b) => Number(b.isFeatured) - Number(a.isFeatured));
   const [categories, setCategories] = useState(pinFeatured(initialCategories));
-  useEffect(() => setCategories(pinFeatured(initialCategories)), [initialCategories]);
+  useEffect(() => {
+    const id = setTimeout(() => setCategories(pinFeatured(initialCategories)), 0);
+    return () => clearTimeout(id);
+  }, [initialCategories]);
   const [name, setName] = useState(restaurantName);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [banner, setBanner] = useState<string | null>(restaurantBanner);
@@ -338,9 +344,9 @@ export function MenuClient({
       {readOnly && (
         <div className="mb-4 rounded-lg border border-primary/30 bg-primary-light px-4 py-3 text-sm font-medium text-primary">
           Tu prueba gratuita terminó. Suscribite para volver a editar el menú.{" "}
-          <a href="/dashboard/pricing" className="underline underline-offset-2">
+          <Link href="/dashboard/pricing" className="underline underline-offset-2">
             Mejorá tu plan
-          </a>
+          </Link>
         </div>
       )}
       <div
@@ -360,7 +366,7 @@ export function MenuClient({
             <div className="relative h-24 w-32 shrink-0">
               <div className="flex h-24 w-32 items-center justify-center overflow-hidden rounded-lg border-4 border-background bg-surface shadow-sm">
                 {logoPreview || restaurantLogo ? (
-                  <img src={logoPreview ?? restaurantLogo!} alt={restaurantName} className="h-full w-full object-cover" />
+                  <Image src={logoPreview ?? restaurantLogo!} alt={restaurantName} fill unoptimized className="object-cover" />
                 ) : (
                   <span className="text-2xl font-semibold text-text-secondary">
                     {restaurantName.charAt(0).toUpperCase()}

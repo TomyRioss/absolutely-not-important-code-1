@@ -203,9 +203,11 @@ function LoginForm() {
       </div>
 
       <div className="relative hidden md:block md:w-[40%]">
-        <img
+        <Image
           src="https://images.pexels.com/photos/2696064/pexels-photo-2696064.jpeg?auto=compress&cs=tinysrgb&w=1200"
           alt="Chef preparando plato"
+          fill
+          unoptimized
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/80 via-primary/50 to-primary/20" />
@@ -224,3 +226,4 @@ function LoginForm() {
     </main>
   );
 }
+import Image from "next/image";

@@ -1,5 +1,7 @@
 "use client";
 
+import NextImage from "next/image";
+
 import { useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import Cropper, { type Area } from "react-easy-crop";
@@ -64,7 +66,7 @@ export function ProductImageUploader({
         title="Subir imagen"
       >
         {image ? (
-          <img src={image} alt="" className="h-full w-full object-cover" />
+          <NextImage src={image} alt="" fill unoptimized className="object-cover" />
         ) : (
           <div className="flex flex-col items-center gap-1 text-text-secondary">
             <Camera className={size === "lg" ? "h-6 w-6" : "h-4 w-4"} />

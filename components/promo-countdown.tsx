@@ -19,9 +19,12 @@ export function PromoCountdown({ className = "" }: { className?: string }) {
   const [time, setTime] = useState<ReturnType<typeof getTimeLeft> | null>(null);
 
   useEffect(() => {
-    setTime(getTimeLeft());
+    const initialId = setTimeout(() => setTime(getTimeLeft()), 0);
     const id = setInterval(() => setTime(getTimeLeft()), 1000);
-    return () => clearInterval(id);
+    return () => {
+      clearTimeout(initialId);
+      clearInterval(id);
+    };
   }, []);
 
   if (!time || time.expired) return null;

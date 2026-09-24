@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useState, useTransition } from "react";
 import { FaLink, FaFacebook, FaWhatsapp, FaArrowUpRightFromSquare, FaShareNodes } from "react-icons/fa6";
 import {
@@ -319,7 +321,7 @@ export function DesignClient({
               <div className="relative h-24 w-32 shrink-0">
                 <div className="flex h-24 w-32 items-center justify-center overflow-hidden rounded-lg border-4 border-background bg-surface shadow-sm">
                   {logoPreview || restaurantLogo ? (
-                    <img src={logoPreview ?? restaurantLogo!} alt={restaurantName} className="h-full w-full object-cover" />
+                    <Image src={logoPreview ?? restaurantLogo!} alt={restaurantName} fill unoptimized className="object-cover" />
                   ) : (
                     <span className="text-2xl font-semibold text-text-secondary">
                       {restaurantName.charAt(0).toUpperCase()}

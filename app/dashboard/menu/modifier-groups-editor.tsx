@@ -72,11 +72,12 @@ export function ModifierGroupsEditor({
 
   useEffect(() => {
     if (!drawerOpen) return;
-    setForms((prev) => {
+    const id = setTimeout(() => setForms((prev) => {
       const unsaved = prev.filter((f) => !f.id);
       const saved = groups.map((g) => prev.find((f) => f.id === g.id) ?? groupToForm(g));
       return [...saved, ...unsaved];
-    });
+    }), 0);
+    return () => clearTimeout(id);
   }, [groups, drawerOpen]);
 
   function openDrawer(expandKey: string | null) {

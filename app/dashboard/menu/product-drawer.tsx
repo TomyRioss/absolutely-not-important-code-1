@@ -239,19 +239,22 @@ export function ProductDrawer({
 
   useEffect(() => {
     if (!state) return;
-    if (state.mode === "edit") {
-      setName(state.product.name);
-      setDescription(state.product.description ?? "");
-      const variants = state.product.variants.length > 0 ? state.product.variants : undefined;
-      setRows(variants ? variants.map((v) => rowFromVariant(v)) : [rowFromVariant()]);
-      setPriceMode(variants && variants.length > 1 ? "variants" : "simple");
-    } else {
-      setName("");
-      setDescription("");
-      setRows([rowFromVariant()]);
-      setPriceMode("simple");
-    }
-    setPendingImage(null);
+    const id = setTimeout(() => {
+      if (state.mode === "edit") {
+        setName(state.product.name);
+        setDescription(state.product.description ?? "");
+        const variants = state.product.variants.length > 0 ? state.product.variants : undefined;
+        setRows(variants ? variants.map((v) => rowFromVariant(v)) : [rowFromVariant()]);
+        setPriceMode(variants && variants.length > 1 ? "variants" : "simple");
+      } else {
+        setName("");
+        setDescription("");
+        setRows([rowFromVariant()]);
+        setPriceMode("simple");
+      }
+      setPendingImage(null);
+    }, 0);
+    return () => clearTimeout(id);
   }, [state]);
 
   function updateRow(key: string, patch: Partial<Row>) {

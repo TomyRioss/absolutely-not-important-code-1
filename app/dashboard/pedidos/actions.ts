@@ -6,15 +6,7 @@ import { pointsForTotal } from "@/lib/loyalty";
 import { revalidatePath } from "next/cache";
 import { assertOwnsRestaurant } from "@/lib/tenant";
 
-const ORDER_STATUSES = [
-  "PENDING",
-  "CONFIRMED",
-  "PREPARING",
-  "READY",
-  "COMPLETED",
-  "CANCELLED",
-] as const;
-type OrderStatus = (typeof ORDER_STATUSES)[number];
+type OrderStatus = "PENDING" | "CONFIRMED" | "PREPARING" | "READY" | "COMPLETED" | "CANCELLED";
 
 export async function updateOrderStatus(
   orderId: string,
