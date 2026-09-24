@@ -56,7 +56,7 @@ export default async function PricingPage() {
           ) : (
             <>
               <form action={subscribeToPro} className="mt-8">
-                <Button type="submit" className="w-full" size="lg">Suscribirme con Rebill</Button>
+                <Button type="submit" className="w-full" size="lg">Suscribirme</Button>
               </form>
               <p className="mt-2 text-center text-xs text-text-secondary">
                 Usá el mismo email de tu cuenta de PlatoRest en Rebill.
