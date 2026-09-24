@@ -2,17 +2,15 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/lib/auth";
-import { Smartphone, ChevronDown, Headset, LogOut, Rocket } from "lucide-react";
+import { ChevronDown, Headset, LogOut, Rocket } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SidebarNav } from "./sidebar-nav";
 import { MobileNav } from "./mobile-nav";
-import { QrDownloadButton } from "./qr-download-button";
-import { Separator } from "@/components/ui/separator";
+import { DashboardShell } from "./dashboard-shell";
 import { prisma } from "@/lib/prisma";
 import { getOnboardingProgress } from "@/lib/onboarding";
 
@@ -150,31 +148,9 @@ export default async function AdminLayout({
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="hidden w-56 shrink-0 flex-col bg-primary py-6 md:flex">
-          <SidebarNav onboarding={onboarding} />
-
-          {restaurant && (
-            <div className="mt-auto border-t border-white/15 px-3 pt-4">
-              <div className="flex items-stretch overflow-hidden rounded-md bg-white">
-                <a
-                  href={`/menu/${restaurant.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex flex-1 items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/5"
-                >
-                  <Smartphone className="h-6 w-6" />
-                  Vista previa
-                </a>
-                <Separator orientation="vertical" className="!h-auto bg-border" />
-                <QrDownloadButton menuUrl={menuUrl} slug={restaurant.slug} />
-              </div>
-            </div>
-          )}
-        </aside>
-
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
-      </div>
+      <DashboardShell menuUrl={menuUrl} slug={restaurant?.slug ?? null} onboarding={onboarding}>
+        {children}
+      </DashboardShell>
     </div>
   );
 }

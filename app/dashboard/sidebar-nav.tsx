@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, UtensilsCrossed, Gift, ChevronDown, Users, ClipboardList } from "lucide-react";
+import { Home, UtensilsCrossed, Gift, ChevronDown, Users, ClipboardList, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { isDev } from "@/lib/feature-scope";
 import { OnboardingWidget } from "./onboarding-widget";
 import type { OnboardingProgress } from "@/lib/onboarding";
@@ -33,7 +33,15 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-export function SidebarNav({ onboarding }: { onboarding?: OnboardingProgress | null }) {
+export function SidebarNav({
+  onboarding,
+  collapsed = false,
+  onToggle,
+}: {
+  onboarding?: OnboardingProgress | null;
+  collapsed?: boolean;
+  onToggle?: () => void;
+}) {
   const pathname = usePathname();
   const visibleGroups = NAV_GROUPS.filter((g) => g.scope !== "extra" || isDev());
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => {
@@ -62,25 +70,42 @@ export function SidebarNav({ onboarding }: { onboarding?: OnboardingProgress | n
   }, [openGroups]);
 
   return (
-    <nav className="flex flex-1 flex-col gap-2 px-2">
-      {onboarding && <OnboardingWidget progress={onboarding} variant="compact" />}
+    <nav className={`flex flex-1 flex-col gap-2 ${collapsed ? "px-1" : "px-2"}`}>
+      {onToggle && (
+        <button
+          type="button"
+          onClick={onToggle}
+          title={collapsed ? "Expandir menú" : "Colapsar menú"}
+          aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
+          className="mb-2 flex w-full items-center justify-center rounded-md px-3 py-2 text-white transition-colors hover:bg-white/10"
+        >
+          {collapsed ? <PanelLeftOpen className="h-4.5 w-4.5" /> : <PanelLeftClose className="h-4.5 w-4.5" />}
+        </button>
+      )}
+      {!collapsed && onboarding && <OnboardingWidget progress={onboarding} variant="compact" />}
       <Link
         href="/dashboard"
-        className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+        title={collapsed ? "Inicio" : undefined}
+        className={`flex w-full items-center justify-center rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+          collapsed ? "" : "gap-3"
+        } ${
           pathname === "/dashboard" ? "bg-white/15 text-white" : "text-white hover:bg-white/10"
         }`}
       >
         <Home className="h-4.5 w-4.5" />
-        <span className="flex-1 text-left">Inicio</span>
+        {!collapsed && <span className="flex-1 text-left">Inicio</span>}
       </Link>
       <Link
         href="/dashboard/pedidos"
-        className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+        title={collapsed ? "Pedidos" : undefined}
+        className={`flex w-full items-center justify-center rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+          collapsed ? "" : "gap-3"
+        } ${
           pathname.startsWith("/dashboard/pedidos") ? "bg-white/15 text-white" : "text-white hover:bg-white/10"
         }`}
       >
         <ClipboardList className="h-4.5 w-4.5" />
-        <span className="flex-1 text-left">Pedidos</span>
+        {!collapsed && <span className="flex-1 text-left">Pedidos</span>}
       </Link>
       {visibleGroups.map((group) => {
         const Icon = group.icon;
@@ -97,13 +122,14 @@ export function SidebarNav({ onboarding }: { onboarding?: OnboardingProgress | n
                   return next;
                 })
               }
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              title={collapsed ? group.label : undefined}
+              className={`flex w-full items-center justify-center rounded-md px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10 ${collapsed ? "" : "gap-3"}`}
             >
               <Icon className="h-4.5 w-4.5" />
-              <span className="flex-1 text-left">{group.label}</span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+              {!collapsed && <span className="flex-1 text-left">{group.label}</span>}
+              {!collapsed && <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />}
             </button>
-            {isOpen && (
+            {!collapsed && isOpen && (
               <div className="relative mt-1 ml-6 flex flex-col gap-1 border-l border-white/20 pl-2">
                 {group.items.map(({ href, label }) => {
                   const active = pathname === href;
@@ -128,12 +154,15 @@ export function SidebarNav({ onboarding }: { onboarding?: OnboardingProgress | n
       })}
       <Link
         href="/dashboard/clientes"
-        className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+        title={collapsed ? "Clientes" : undefined}
+        className={`flex w-full items-center justify-center rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+          collapsed ? "" : "gap-3"
+        } ${
           pathname.startsWith("/dashboard/clientes") ? "bg-white/15 text-white" : "text-white hover:bg-white/10"
         }`}
       >
         <Users className="h-4.5 w-4.5" />
-        <span className="flex-1 text-left">Clientes</span>
+        {!collapsed && <span className="flex-1 text-left">Clientes</span>}
       </Link>
     </nav>
   );
