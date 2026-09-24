@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 import { PromoCountdown } from "@/components/promo-countdown";
+import { PLAN_PRO_PRICE_ARS } from "@/lib/pricing";
 
 const currentTime = () => Date.now();
 
@@ -40,7 +41,7 @@ export default async function PricingPage() {
         <CardContent className="p-0">
           <h2 className="text-xl font-bold text-primary">Plan Promocional</h2>
           <p className="mt-1 text-6xl font-extrabold tracking-tight text-primary">
-            $19.900<span className="text-lg font-medium text-text-secondary">/mes</span>
+            ${PLAN_PRO_PRICE_ARS.toLocaleString("es-AR")}<span className="text-lg font-medium text-text-secondary">/mes</span>
           </p>
           <PromoCountdown className="mt-4" />
           <ul className="mt-6 space-y-3">
