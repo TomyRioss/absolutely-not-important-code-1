@@ -24,7 +24,8 @@ function validSignature(raw: Buffer, received: string | null, secret: string) {
 export async function POST(request: Request, { params }: { params: Promise<{ secret: string }> }) {
   try {
     const { secret: pathSecret } = await params;
-    if (!process.env.REBILL_WEBHOOK_PATH_SECRET || pathSecret !== process.env.REBILL_WEBHOOK_PATH_SECRET) {
+    const expectedPathSecret = process.env.REBILL_WEBHOOK_PATH_SECRET?.trim();
+    if (!expectedPathSecret || pathSecret !== expectedPathSecret) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
 
