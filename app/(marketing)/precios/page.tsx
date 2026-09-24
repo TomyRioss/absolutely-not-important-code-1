@@ -54,11 +54,8 @@ export default function PreciosPage() {
                 Suscripción mensual
               </p>
               <p className="mt-3 flex items-baseline justify-center gap-3 lg:justify-end">
-                <span className="text-2xl font-medium text-text-secondary line-through">
-                  $45.000
-                </span>
                 <span className="text-4xl font-bold text-primary sm:text-5xl md:text-6xl">
-                  $19.900<span className="text-xl font-medium text-text-secondary md:text-2xl">/mes</span>
+                  $45.000<span className="text-xl font-medium text-text-secondary md:text-2xl">/mes</span>
                 </span>
               </p>
               <p className="mt-3 text-base font-semibold text-primary">

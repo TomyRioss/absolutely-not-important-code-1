@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { HiHeart, HiDeviceTablet, HiCalculator, HiCube, HiChartBar, HiSparkles } from "react-icons/hi2";
+import { HiHeart, HiDeviceTablet } from "react-icons/hi2";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -48,72 +48,53 @@ const HOME_FAQS = [
   {
     question: "¿Puedo probarlo antes de empezar?",
     answer:
-      "Sí, tenés una prueba de 14 días gratuita al registrarte para probar el sistema.",
+      "Sí, tenés una prueba de 24 días gratuita al registrarte para probar el sistema.",
   },
 ];
 
 const FEATURES = [
   {
     icon: HiHeart,
-    title: "Fidelización",
-    image: "https://images.pexels.com/photos/1304540/pexels-photo-1304540.jpeg?auto=compress&cs=tinysrgb&w=800",
+    eyebrow: "Fidelización de clientes",
+    title: "Convertí cada visita en un cliente que vuelve",
+    description:
+      "Un programa de fidelización simple y automático: tus clientes suman puntos, ganan regalos y vuelven una y otra vez. Sin tarjetas de papel, sin planillas: todo pasa en tu menú digital.",
+    image: "https://images.pexels.com/photos/1304540/pexels-photo-1304540.jpeg?auto=compress&cs=tinysrgb&w=1200",
     items: [
-      "Tienda de puntos",
-      "Regalos por visita",
-      "Registro de clientes",
+      {
+        title: "Tienda de puntos",
+        description: "Tus clientes canjean sus puntos por premios y vuelven por más.",
+      },
+      {
+        title: "Regalos por visita",
+        description: "Sorprendé a quienes te eligen todos los días y convertilos en fans.",
+      },
+      {
+        title: "Registro de clientes",
+        description: "Construí tu propia base de datos y conocé a tus mejores clientes.",
+      },
     ],
   },
   {
     icon: HiDeviceTablet,
-    title: "Menú digital",
-    image: "https://images.pexels.com/photos/4391470/pexels-photo-4391470.jpeg?auto=compress&cs=tinysrgb&w=800",
+    eyebrow: "Menú digital con QR",
+    title: "Tu carta viva, en el celular de cada cliente",
+    description:
+      "Un menú digital que trabaja para vos las 24 horas: recibe pedidos, toma reservas y muestra tus platos donde te buscan. Sin comisiones de apps de delivery: cada venta es 100% tuya.",
+    image: "https://images.pexels.com/photos/4391470/pexels-photo-4391470.jpeg?auto=compress&cs=tinysrgb&w=1200",
     items: [
-      "Pedidos online sin comisiones",
-      "Menú digital apto para Google Maps",
-      "Reservas desde el menú digital",
-    ],
-  },
-  {
-    icon: HiCalculator,
-    title: "POS punto de venta",
-    image: "https://images.pexels.com/photos/4386366/pexels-photo-4386366.jpeg?auto=compress&cs=tinysrgb&w=800",
-    items: [
-      "Registro de pedidos",
-      "Registro de gastos",
-      "Ventas por cajero",
-    ],
-  },
-  {
-    icon: HiCube,
-    title: "Inventario",
-    image: "https://images.pexels.com/photos/4483773/pexels-photo-4483773.jpeg?auto=compress&cs=tinysrgb&w=800",
-    items: [
-      "Inventario por proveedor",
-      "Fechas de vencimiento en un solo lugar",
-      "Stock y alertas de restock",
-    ],
-  },
-  {
-    icon: HiChartBar,
-    title: "Estadísticas",
-    image: "https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=800",
-    items: [
-      "Márgenes por plato",
-      "Márgenes por ingredientes y proveedor",
-      "Línea de tiempo de márgenes y ganancias",
-      "Márgenes ajustado a la inflación en tiempo real",
-    ],
-  },
-  {
-    icon: HiSparkles,
-    title: "Próximamente",
-    image: "https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=800",
-    items: [
-      "Pedidos a cocina",
-      "App para mozos",
-      "Gestión de mesas con IA",
-      "Manejo de WhatsApp con IA",
-      "Y mucho más...",
+      {
+        title: "Pedidos online sin comisiones",
+        description: "Olvidate de pagar un % por pedido: lo que vendés es tuyo.",
+      },
+      {
+        title: "Menú digital apto para Google Maps",
+        description: "Tu carta siempre actualizada, exactamente donde te encuentran.",
+      },
+      {
+        title: "Reservas desde el menú digital",
+        description: "Ocupá tu salón sin atender un solo teléfono.",
+      },
     ],
   },
 ];
@@ -182,53 +163,76 @@ export default function LandingPage() {
       </header>
 
 
-      <section className="bg-surface px-6 py-20">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-14 text-center">
-            <h2 className="text-3xl font-bold text-primary md:text-4xl">
-              ¡Gestiona todo desde un solo lugar!
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {FEATURES.map((f) => (
-              <Card
-                key={f.title}
-                className="overflow-hidden rounded-xl border border-border bg-background pt-0"
-              >
-                <div className="relative h-48 w-full">
-                  <Image
-                    src={f.image}
-                    alt={`${f.title} para restaurantes - PlatoRest`}
-                    fill
-                    sizes="(min-width: 768px) 33vw, 100vw"
-                    className="object-cover"
-                  />
-                  {f.title !== "Fidelización" && f.title !== "Menú digital" && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                      <span className="text-lg font-bold text-white">Próximamente</span>
-                    </div>
-                  )}
-                </div>
-                <CardContent className="p-6">
-                  <h3 className="flex items-center gap-2 text-lg font-semibold text-primary">
-                    <f.icon className="h-6 w-6" aria-hidden="true" />
-                    {f.title}
-                  </h3>
-                  <ul className="mt-4 space-y-2">
-                    {f.items.map((item) => (
-                      <li key={item} className="flex items-start gap-2 text-sm text-text-primary">
-                        <span className="mt-0.5 text-green-500">✓</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+      <div className="bg-surface pb-16 pt-20">
+        <div className="mx-auto mb-14 max-w-6xl px-6 text-center">
+          <h2 className="text-3xl font-bold text-primary md:text-4xl">
+            ¡Gestiona todo desde un solo lugar!
+          </h2>
         </div>
-      </section>
+
+        <div className="flex flex-col gap-10">
+            {FEATURES.map((f, i) => {
+              const imageFirst = i % 2 === 1;
+              return (
+                <section
+                  key={f.title}
+                  className={cn(
+                    "w-full",
+                    i % 2 === 0 ? "bg-surface" : "bg-background"
+                  )}
+                >
+                  <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-5 lg:gap-0">
+                    <div
+                      className={cn(
+                        "relative mx-auto h-56 w-full max-w-xl sm:h-64 lg:col-span-2 lg:mx-6 lg:my-10 lg:h-[420px] lg:max-w-none lg:rounded-2xl",
+                        imageFirst ? "lg:order-first" : "lg:order-last"
+                      )}
+                    >
+                      <Image
+                        src={f.image}
+                        alt={`${f.eyebrow} - PlatoRest`}
+                        fill
+                        sizes="(min-width: 1024px) 40vw, (min-width: 640px) 100vw, 100vw"
+                        className="object-cover lg:rounded-2xl"
+                      />
+                    </div>
+                    <div className={cn("flex items-center px-6 py-10 sm:px-12 lg:col-span-3 lg:px-20", imageFirst ? "lg:order-last" : "lg:order-first")}>
+                      <div className="max-w-xl">
+                        <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-primary">
+                          <f.icon className="h-5 w-5" aria-hidden="true" />
+                          {f.eyebrow}
+                        </p>
+                        <h3 className="mt-4 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+                          {f.title}
+                        </h3>
+                        <p className="mt-5 text-lg leading-relaxed text-text-secondary">
+                          {f.description}
+                        </p>
+                        <ul className="mt-8 space-y-5">
+                          {f.items.map((item) => (
+                            <li key={item.title} className="flex items-start gap-4">
+                              <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                                ✓
+                              </span>
+                              <div>
+                                <p className="font-semibold text-text-primary">
+                                  {item.title}
+                                </p>
+                                <p className="mt-1 text-sm text-text-secondary">
+                                  {item.description}
+                                </p>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              );
+            })}
+        </div>
+      </div>
 
       {process.env.NEXT_PUBLIC_SHOW_PRICING === "true" && (
         <section className="px-6 py-32">
@@ -260,11 +264,8 @@ export default function LandingPage() {
 
                 <div className="text-center">
                   <p className="flex items-baseline justify-center gap-3">
-                    <span className="text-2xl font-medium text-text-secondary line-through">
-                      $45.000
-                    </span>
                     <span className="text-4xl font-bold text-primary sm:text-5xl md:text-6xl">
-                      $19.900<span className="text-xl font-medium text-text-secondary md:text-2xl">/mes</span>
+                      $45.000<span className="text-xl font-medium text-text-secondary md:text-2xl">/mes</span>
                     </span>
                   </p>
                   <PromoCountdown className="mt-6" />

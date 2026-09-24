@@ -28,6 +28,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/dashboard/fidelizacion/regalos", label: "Regalos por visita" },
       { href: "/dashboard/fidelizacion/encuestas", label: "Encuestas" },
       { href: "/dashboard/fidelizacion/conversion", label: "Configurar Conversión" },
+      { href: "/dashboard/fidelizacion/tarjeta", label: "Tarjeta de Fidelización" },
     ],
   },
 ];

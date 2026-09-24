@@ -53,7 +53,7 @@ export default async function PricingPage() {
         <CardContent className="p-0">
           <h2 className="text-xl font-bold text-primary">Plan Promocional</h2>
           <p className="mt-1 text-6xl font-extrabold tracking-tight text-primary">
-            $19.900<span className="text-lg font-medium text-text-secondary">/mes</span>
+            $45.000<span className="text-lg font-medium text-text-secondary">/mes</span>
           </p>
           <PromoCountdown className="mt-4" />
 

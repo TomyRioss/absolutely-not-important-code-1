@@ -64,6 +64,7 @@ export default async function ClienteDetailPage({
           {favoriteProduct && (
             <p className="text-text-secondary">Favorito: {favoriteProduct}</p>
           )}
+          <p className="text-text-secondary">Tarjeta de fidelización: próximamente</p>
         </div>
       </div>
 

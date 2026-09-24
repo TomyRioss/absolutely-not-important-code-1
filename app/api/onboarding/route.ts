@@ -46,7 +46,7 @@ export async function POST(req: Request) {
         businessSlug = `${baseBusinessSlug}-${businessSuffix++}`;
       }
 
-      const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+      const trialEndsAt = new Date(Date.now() + 24 * 24 * 60 * 60 * 1000);
       const business = await prisma.business.create({
         data: {
           name: restaurantName,

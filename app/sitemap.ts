@@ -3,7 +3,7 @@ import { SITE } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const routes = ["", "/funcionalidades/menu-digital"];
+  const routes = [""];
 
   if (process.env.NEXT_PUBLIC_SHOW_PRICING === "true") {
     routes.push("/precios");

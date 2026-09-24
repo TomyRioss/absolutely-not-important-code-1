@@ -14,6 +14,7 @@ import { customerSignOut } from "@/lib/customer-session-client";
 const TABS = [
   { href: "", label: "Tienda" },
   { href: "/encuestas", label: "Encuestas" },
+  { href: "/tarjeta", label: "Tarjeta" },
 ];
 
 export function TiendaPuntosNavbar({
@@ -52,7 +53,7 @@ export function TiendaPuntosNavbar({
         </span>
       </div>
 
-      <div className="grid w-full grid-cols-2 gap-1.5 bg-surface px-4 py-2">
+      <div className="grid w-full grid-cols-3 gap-1.5 bg-surface px-4 py-2">
         {TABS.map((tab) => {
           const href = `${base}${tab.href}`;
           const active = pathname === href;
