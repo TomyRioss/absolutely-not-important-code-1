@@ -13,7 +13,7 @@ export default function TopNavBar() {
           PlatoRest
         </Link>
 
-        <div className="hidden items-center justify-end gap-3 md:flex">
+        <div className="hidden items-center justify-end gap-3 md:col-start-3 md:flex">
           <Link
             href="/login"
             className="border-b-2 border-primary text-sm font-semibold text-text-primary transition-colors duration-200 hover:text-primary"

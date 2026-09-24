@@ -489,10 +489,24 @@ export async function updateRestaurant(
   }
   try {
     await assertOwnsRestaurant(restaurantId);
+    const current = await prisma.restaurant.findUnique({ where: { id: restaurantId }, select: { slug: true } });
+    if (!current) return { ok: false, error: "Restaurante no encontrado." };
+
+    let slug = current.slug;
+    if (data.name !== undefined) {
+      const baseSlug = slugify(data.name) || "restaurante";
+      slug = baseSlug;
+      let suffix = 1;
+      while (await prisma.restaurant.findFirst({ where: { slug, id: { not: restaurantId } }, select: { id: true } })) {
+        slug = `${baseSlug}-${suffix++}`;
+      }
+    }
+
     const updated = await prisma.restaurant.update({
       where: { id: restaurantId },
       data: {
         ...(data.name !== undefined ? { name: data.name.trim() } : {}),
+        ...(data.name !== undefined ? { slug } : {}),
         ...(data.logo !== undefined ? { logo: data.logo } : {}),
         ...(data.banner !== undefined ? { banner: data.banner } : {}),
         ...(data.address !== undefined ? { address: data.address?.trim() || null } : {}),
@@ -502,6 +516,8 @@ export async function updateRestaurant(
       include: { business: { select: { slug: true } } },
     });
     revalidatePath(`/${updated.business.slug}`);
+    revalidatePath(`/menu/${current.slug}`);
+    revalidatePath(`/menu/${updated.slug}`);
   } catch {
     return { ok: false, error: "No se pudo actualizar el restaurante." };
   }

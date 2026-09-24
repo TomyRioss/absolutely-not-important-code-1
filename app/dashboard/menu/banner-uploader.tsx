@@ -62,8 +62,20 @@ export function BannerUploader({
     <>
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelected} className="hidden" />
 
+      <button
+        type="button"
+        onClick={() => fileInputRef.current?.click()}
+        className="group absolute inset-0 z-10 flex cursor-pointer items-center justify-center rounded-xl bg-black/0 text-white transition hover:bg-black/35 focus-visible:bg-black/35 focus-visible:outline-none"
+        aria-label="Subir banner"
+      >
+        <span className="flex items-center gap-2 rounded-lg bg-black/55 px-3 py-2 text-sm font-medium opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
+          <Upload className="h-4 w-4" />
+          Subir banner
+        </span>
+      </button>
+
       <DropdownMenu>
-        <DropdownMenuTrigger className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-text-primary shadow-sm outline-none hover:bg-white">
+        <DropdownMenuTrigger className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-text-primary shadow-sm outline-none hover:bg-white">
           <Camera className="h-4 w-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent className="min-w-44">

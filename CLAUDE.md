@@ -1,5 +1,7 @@
 @AGENTS.md
 
+Cuenta de testing: `docs/CREDENTIALS.md` (archivo ignorado por Git).
+
 # Reglas de proyecto
 
 ## Modo comunicación

@@ -77,9 +77,9 @@ export function SidebarNav({
           onClick={onToggle}
           title={collapsed ? "Expandir menú" : "Colapsar menú"}
           aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
-          className="mb-2 flex w-full items-center justify-center rounded-md px-3 py-2 text-white transition-colors hover:bg-white/10"
+          className="mb-2 flex w-full items-center justify-center rounded-md px-1 py-1 text-white/35 transition-colors hover:text-white/60"
         >
-          {collapsed ? <PanelLeftOpen className="h-4.5 w-4.5" /> : <PanelLeftClose className="h-4.5 w-4.5" />}
+          {collapsed ? <PanelLeftOpen className="h-3 w-3 stroke-[1.5]" /> : <PanelLeftClose className="h-3 w-3 stroke-[1.5]" />}
         </button>
       )}
       {!collapsed && onboarding && <OnboardingWidget progress={onboarding} variant="compact" />}

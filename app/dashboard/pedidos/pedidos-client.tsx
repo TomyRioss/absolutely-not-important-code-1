@@ -314,21 +314,18 @@ export function PedidosClient({
 
   return (
     <main className="-m-4 flex h-[calc(100%+2rem)] flex-col bg-surface md:-m-6 md:h-[calc(100%+3rem)]">
-      <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
-        <h1 className="text-xl font-semibold text-text-primary">Pedidos</h1>
+      {error && (
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
         {error && (
           <p className="text-sm text-danger" role="alert">
             {error}
           </p>
         )}
-      </div>
+        </div>
+      )}
 
-      {orders.length === 0 ? (
-        <p className="p-4 text-sm text-text-secondary">Sin pedidos todavía.</p>
-      ) : (
-        <>
-          {/* Desktop / tablet: drag-and-drop kanban */}
-          <div className="hidden flex-1 overflow-hidden md:flex">
+      {/* Desktop / tablet: drag-and-drop kanban */}
+      <div className="hidden flex-1 overflow-hidden md:flex">
             <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
               <div className="grid flex-1 grid-cols-5 divide-x divide-border overflow-hidden">
                 {KANBAN_COLUMNS.map((col) => {
@@ -370,8 +367,8 @@ export function PedidosClient({
             </DndContext>
           </div>
 
-          {/* Mobile: status tabs + vertical list */}
-          <div className="flex flex-1 flex-col overflow-hidden md:hidden">
+      {/* Mobile: status tabs + vertical list */}
+      <div className="flex flex-1 flex-col overflow-hidden md:hidden">
             <div className="flex shrink-0 gap-2 overflow-x-auto border-b border-border bg-surface px-3 py-2.5">
               {KANBAN_COLUMNS.map((col) => {
                 const count = orders.filter((o) => o.status === col.status).length;
@@ -423,9 +420,7 @@ export function PedidosClient({
                   </li>
                 ))}
             </ul>
-          </div>
-        </>
-      )}
+      </div>
 
       {editingOrder && (
         <EditOrderDialog

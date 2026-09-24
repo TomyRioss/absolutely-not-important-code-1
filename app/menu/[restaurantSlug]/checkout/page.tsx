@@ -107,14 +107,18 @@ export default function CheckoutPage() {
           {success.result.total.toLocaleString("es-AR")}
         </p>
         {success.whatsappUrl && (
-          <a
-            href={success.whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded bg-[#25D366] px-5 py-3 font-medium text-white hover:opacity-90"
-          >
-            <FaWhatsapp className="h-5 w-5" /> Avisar por WhatsApp
-          </a>
+          <p className="flex items-center gap-1.5 text-sm text-text-secondary">
+            <FaWhatsapp className="h-4 w-4 text-[#25D366]" />
+            Seguilo por WhatsApp{" "}
+            <a
+              href={success.whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-[#128C7E] underline underline-offset-2 hover:text-[#075E54]"
+            >
+              {success.result.whatsappNumber}
+            </a>
+          </p>
         )}
         <button
           type="button"
