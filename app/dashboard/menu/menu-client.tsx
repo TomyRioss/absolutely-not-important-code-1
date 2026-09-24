@@ -364,7 +364,7 @@ export function MenuClient({
           </div>
           <div className="-mt-10 flex items-end gap-3 px-4">
             <div className="relative h-24 w-32 shrink-0">
-              <div className="flex h-24 w-32 items-center justify-center overflow-hidden rounded-lg border-4 border-background bg-surface shadow-sm">
+              <div className="relative z-10 pointer-events-none flex h-24 w-32 items-center justify-center overflow-hidden rounded-lg border-4 border-background bg-surface shadow-sm">
                 {logoPreview || restaurantLogo ? (
                   <Image src={logoPreview ?? restaurantLogo!} alt={restaurantName} fill unoptimized className="object-cover" />
                 ) : (

@@ -62,9 +62,21 @@ export function LogoUploader({
     <>
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelected} className="hidden" />
 
+      <button
+        type="button"
+        onClick={() => fileInputRef.current?.click()}
+        className="group absolute inset-0 z-0 flex cursor-pointer items-center justify-center rounded-lg text-white transition hover:bg-black/35 focus-visible:bg-black/35 focus-visible:outline-none"
+        aria-label="Subir logo"
+      >
+        <span className="flex items-center gap-1.5 rounded-lg bg-black/55 px-2.5 py-1.5 text-xs font-medium opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
+          <Upload className="h-3.5 w-3.5" />
+          Subir logo
+        </span>
+      </button>
+
       <DropdownMenu>
         <DropdownMenuTrigger
-          className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-primary text-white shadow-sm outline-none hover:bg-primary-hover"
+          className="absolute -bottom-1 -right-1 z-20 flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-primary text-white shadow-sm outline-none hover:bg-primary-hover"
         >
           <Camera className="h-4 w-4" />
         </DropdownMenuTrigger>
