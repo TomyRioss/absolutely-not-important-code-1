@@ -30,7 +30,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ sec
     }
 
     const raw = Buffer.from(await request.arrayBuffer());
-    const signingSecret = process.env.REBILL_WEBHOOK_SIGNING_SECRET;
+    const signingSecret = process.env.REBILL_WEBHOOK_SIGNING_SECRET?.trim();
     if (!signingSecret || !validSignature(raw, request.headers.get("x-rebill-signature"), signingSecret)) {
       return NextResponse.json({ error: "invalid signature" }, { status: 401 });
     }
