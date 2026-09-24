@@ -56,7 +56,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ sec
     }
 
     const user = await prisma.user.findUnique({
-      where: { email: { equals: email, mode: "insensitive" } },
+      where: { email },
       select: { businessesOwned: { select: { id: true } } },
     });
     const businessId = user?.businessesOwned[0]?.id;
