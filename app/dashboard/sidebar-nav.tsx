@@ -16,8 +16,8 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Menú digital",
     icon: UtensilsCrossed,
     items: [
-      { href: "/dashboard/menu", label: "Menú de productos" },
-      { href: "/dashboard/menu/landing", label: "Bienvenida y diseño" },
+      { href: "/dashboard/menu", label: "Productos" },
+      { href: "/dashboard/menu/landing", label: "Bienvenida" },
     ],
   },
   {
