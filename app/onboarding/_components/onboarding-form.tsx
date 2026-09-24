@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PhoneInput } from "react-international-phone";
 import "react-international-phone/style.css";
@@ -36,6 +36,8 @@ export default function OnboardingForm({
   const [address, setAddress] = useState("");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [error, setError] = useState("");
+  const finishingRef = useRef(false);
+  const [finishing, setFinishing] = useState(false);
 
   async function handlePasswordSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -78,6 +80,10 @@ export default function OnboardingForm({
   }
 
   async function finishOnboarding() {
+    if (finishingRef.current) return;
+    finishingRef.current = true;
+    setFinishing(true);
+    setError("");
     try {
       const res = await fetch("/api/onboarding", {
         method: "POST",
@@ -88,12 +94,15 @@ export default function OnboardingForm({
         const data = await res.json().catch(() => ({}));
         console.error("[onboarding] finish failed", data);
         setError(data.error || "No se pudo guardar la dirección. Podés completarla después.");
+        return;
       }
+      router.push("/dashboard");
     } catch (err) {
       console.error("[onboarding] finish failed", err);
       setError("No se pudo guardar la dirección. Podés completarla después.");
     } finally {
-      router.push("/dashboard");
+      finishingRef.current = false;
+      setFinishing(false);
     }
   }
 
@@ -286,6 +295,7 @@ export default function OnboardingForm({
               <button
                 type="button"
                 onClick={finishOnboarding}
+                disabled={finishing}
                 className="text-sm font-semibold text-text-secondary hover:text-text-primary"
               >
                 Omitir este paso
@@ -293,6 +303,7 @@ export default function OnboardingForm({
               <button
                 type="button"
                 onClick={finishOnboarding}
+                disabled={finishing}
                 className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-hover"
               >
                 Continuar

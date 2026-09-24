@@ -47,23 +47,33 @@ export async function POST(req: Request) {
       }
 
       const trialEndsAt = new Date(Date.now() + 24 * 24 * 60 * 60 * 1000);
-      const business = await prisma.business.create({
-        data: {
-          name: restaurantName,
-          slug: businessSlug,
-          trialEndsAt,
-          plan: "trial",
-          ownerId: user.id,
-          memberships: { create: { role: "OWNER", userId: user.id } },
-        },
-      });
+      try {
+        const business = await prisma.business.create({
+          data: {
+            name: restaurantName,
+            slug: businessSlug,
+            trialEndsAt,
+            plan: "trial",
+            ownerId: user.id,
+            memberships: { create: { role: "OWNER", userId: user.id } },
+          },
+        });
 
-      membership = await prisma.membership.findFirstOrThrow({
-        where: { businessId: business.id, userId: user.id },
-        include: { business: true },
-      });
+        membership = await prisma.membership.findFirstOrThrow({
+          where: { businessId: business.id, userId: user.id },
+          include: { business: true },
+        });
 
-      await seedDefaultRewards(business.id);
+        await seedDefaultRewards(business.id);
+      } catch (err) {
+        if (!(err && typeof err === "object" && "code" in err && err.code === "P2002")) throw err;
+        const existingMembership = await prisma.membership.findFirst({
+          where: { userId: user.id, role: "OWNER" },
+          include: { business: true },
+        });
+        if (!existingMembership) throw err;
+        membership = existingMembership;
+      }
     }
 
     const existingRestaurant = await prisma.restaurant.findFirst({
