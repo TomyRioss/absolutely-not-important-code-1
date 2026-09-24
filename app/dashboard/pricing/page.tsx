@@ -18,7 +18,7 @@ export default async function PricingPage() {
       })
     : null;
   const business = membership?.business;
-  const rebillPaymentLink = process.env.REBILL_PAYMENT_LINK_URL;
+  const rebillPaymentLink = process.env.REBILL_PAYMENT_LINK_URL?.replace(/^\uFEFF/, "").trim();
   const trialDaysLeft = business?.trialEndsAt
     ? Math.max(0, Math.ceil((new Date(business.trialEndsAt).getTime() - currentTime()) / 86400000))
     : null;
