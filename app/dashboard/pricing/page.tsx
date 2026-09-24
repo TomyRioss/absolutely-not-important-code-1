@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
-import { subscribeToPro } from "./actions";
 import { PromoCountdown } from "@/components/promo-countdown";
 
 const currentTime = () => Date.now();
@@ -18,6 +17,7 @@ export default async function PricingPage() {
       })
     : null;
   const business = membership?.business;
+  const rebillPaymentLink = process.env.REBILL_PAYMENT_LINK_URL;
   const trialDaysLeft = business?.trialEndsAt
     ? Math.max(0, Math.ceil((new Date(business.trialEndsAt).getTime() - currentTime()) / 86400000))
     : null;
@@ -55,9 +55,19 @@ export default async function PricingPage() {
             <Button disabled className="mt-8 w-full" size="lg">Plan activo</Button>
           ) : (
             <>
-              <form action={subscribeToPro} className="mt-8">
-                <Button type="submit" className="w-full" size="lg">Suscribirme</Button>
-              </form>
+              {rebillPaymentLink ? (
+                <Button
+                  className="mt-8 w-full"
+                  size="lg"
+                  render={<a href={rebillPaymentLink} />}
+                >
+                  Suscribirme
+                </Button>
+              ) : (
+                <Button disabled className="mt-8 w-full" size="lg">
+                  Suscripción no disponible
+                </Button>
+              )}
               <p className="mt-2 text-center text-xs text-text-secondary">
                 Usá el mismo email de tu cuenta de PlatoRest en Rebill.
               </p>
