@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 import { PromoCountdown } from "@/components/promo-countdown";
 import { PLAN_PRO_PRICE_ARS } from "@/lib/pricing";
-import { RebillCheckout } from "./rebill-checkout";
 
 const currentTime = () => Date.now();
 
@@ -19,8 +18,7 @@ export default async function PricingPage() {
       })
     : null;
   const business = membership?.business;
-  const rebillPublicKey = process.env.NEXT_PUBLIC_REBILL_PUBLIC_KEY?.trim();
-  const rebillPlanId = process.env.REBILL_PLAN_ID?.trim();
+  const rebillPaymentLink = process.env.REBILL_PAYMENT_LINK_URL?.replace(/^\uFEFF/, "").trim();
   const trialDaysLeft = business?.trialEndsAt
     ? Math.max(0, Math.ceil((new Date(business.trialEndsAt).getTime() - currentTime()) / 86400000))
     : null;
@@ -59,8 +57,10 @@ export default async function PricingPage() {
             <Button disabled className="mt-8 w-full" size="lg">Plan activo</Button>
           ) : (
             <>
-              {rebillPublicKey && rebillPlanId && business ? (
-                <RebillCheckout publicKey={rebillPublicKey} planId={rebillPlanId} email={session?.user?.email} name={session?.user?.name} />
+              {rebillPaymentLink ? (
+                <Button className="mt-8 w-full" size="lg" render={<a href={rebillPaymentLink} />}>
+                  Suscribirme
+                </Button>
               ) : (
                 <Button disabled className="mt-8 w-full" size="lg">
                   Suscripción no disponible
