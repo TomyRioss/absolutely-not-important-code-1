@@ -3,10 +3,21 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 type SubscriptionResponse = {
-  result?: { plan?: { id?: string }; status?: string };
+  result?: {
+    plan?: { id?: string };
+    status?: string;
+    customer?: { email?: string };
+    customerEmail?: string;
+  };
   plan?: { id?: string };
   status?: string;
+  customer?: { email?: string };
+  customerEmail?: string;
 };
+
+function normalizeEmail(value?: string | null) {
+  return value?.trim().toLowerCase() ?? "";
+}
 
 export async function POST(request: Request) {
   try {
@@ -22,7 +33,7 @@ export async function POST(request: Request) {
 
     const membership = await prisma.membership.findFirst({
       where: { userId, role: "OWNER" },
-      select: { businessId: true },
+      select: { businessId: true, user: { select: { email: true } } },
       orderBy: { id: "asc" },
     });
     if (!membership) return NextResponse.json({ error: "negocio no encontrado" }, { status: 404 });
@@ -37,6 +48,11 @@ export async function POST(request: Request) {
     const subscription = payload.result ?? payload;
     if (subscription.plan?.id !== planId || subscription.status?.toLowerCase() !== "active") {
       return NextResponse.json({ error: "La suscripción todavía no está activa" }, { status: 409 });
+    }
+
+    const subscriptionEmail = subscription.customer?.email ?? subscription.customerEmail;
+    if (!subscriptionEmail || normalizeEmail(subscriptionEmail) !== normalizeEmail(membership.user.email)) {
+      return NextResponse.json({ error: "El correo del pago no coincide con tu cuenta" }, { status: 409 });
     }
 
     await prisma.business.updateMany({
