@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 import { PromoCountdown } from "@/components/promo-countdown";
 import { PLAN_PRO_PRICE_ARS } from "@/lib/pricing";
+import Link from "next/link";
 
 const currentTime = () => Date.now();
 
@@ -18,7 +19,7 @@ export default async function PricingPage() {
       })
     : null;
   const business = membership?.business;
-  const rebillPaymentLink = process.env.REBILL_PAYMENT_LINK_URL?.replace(/^\uFEFF/, "").trim();
+  const rebillConfigured = Boolean(process.env.NEXT_PUBLIC_REBILL_PUBLIC_KEY?.trim() && process.env.REBILL_PLAN_ID?.trim() && process.env.REBILL_SECRET_KEY?.trim());
   const trialDaysLeft = business?.trialEndsAt
     ? Math.max(0, Math.ceil((new Date(business.trialEndsAt).getTime() - currentTime()) / 86400000))
     : null;
@@ -56,8 +57,8 @@ export default async function PricingPage() {
             <Button disabled className="mt-8 w-full" size="lg">Plan activo</Button>
           ) : (
             <>
-              {rebillPaymentLink ? (
-                <Button className="mt-8 w-full" size="lg" render={<a href={rebillPaymentLink} />}>
+              {rebillConfigured ? (
+                <Button className="mt-8 w-full" size="lg" render={<Link href="/dashboard/pricing/checkout" />}>
                   Suscribirme
                 </Button>
               ) : (
@@ -66,7 +67,7 @@ export default async function PricingPage() {
                 </Button>
               )}
               <p className="mt-2 text-center text-xs text-text-secondary">
-                Podés pagar con cualquier email; la suscripción se vincula a tu cuenta de PlatoRest.
+                El pago se valida con tu cuenta actual de PlatoRest.
               </p>
             </>
           )}

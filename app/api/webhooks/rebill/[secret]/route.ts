@@ -49,38 +49,50 @@ export async function POST(request: Request, { params }: { params: Promise<{ sec
     const data = payload.data;
     const event = payload.webhook?.event;
     const email = data?.customer?.email?.trim().toLowerCase();
-    const metadata = data?.subscriptionMetadata ?? data?.subscription?.metadata ?? data?.paymentMetadata ?? data?.payment?.metadata ?? data?.metadata ?? data?.customAttributes;
-    const metadataBusinessId = metadata?.platorestBusinessId;
+    const metadata = {
+      ...data?.customAttributes,
+      ...data?.metadata,
+      ...data?.payment?.metadata,
+      ...data?.paymentMetadata,
+      ...data?.subscription?.metadata,
+      ...data?.subscriptionMetadata,
+    };
+    const metadataBusinessId = metadata?.platorestBusinessId?.trim();
     const subscriptionId = data?.subscriptionId ?? data?.subscription?.id ?? data?.id;
-    const configuredLink = process.env.REBILL_PAYMENT_LINK_ID;
+    const configuredLink = process.env.REBILL_PAYMENT_LINK_ID?.trim();
     const configuredPlan = process.env.REBILL_PLAN_ID?.trim();
-    if (!configuredLink || !configuredPlan) {
-      console.error("[webhook rebill] IDs de Rebill no configurados");
+    if (!configuredLink && !configuredPlan) {
+      console.error("[webhook rebill] REBILL_PAYMENT_LINK_ID o REBILL_PLAN_ID requerido");
       return NextResponse.json({ error: "webhook misconfigured" }, { status: 500 });
     }
-    const matchesLink = data?.paymentLinkId === configuredLink;
-    const matchesPlan = data?.planId === configuredPlan;
-    if (!data || !event || !subscriptionId || (!matchesLink && !matchesPlan) || (!email && !metadataBusinessId)) {
+    const matchesLink = Boolean(configuredLink && (data?.paymentLinkId === configuredLink || metadata.paymentLinkId === configuredLink));
+    const matchesPlan = Boolean(configuredPlan && data?.planId === configuredPlan);
+    const knownSubscription = subscriptionId
+      ? await prisma.business.findUnique({ where: { mpSubscriptionId: subscriptionId }, select: { id: true } })
+      : null;
+    if (!data || !event || !subscriptionId || (!matchesLink && !matchesPlan && !knownSubscription) || (!email && !metadataBusinessId && !knownSubscription)) {
       console.warn("[webhook rebill] evento ignorado", {
         event,
         subscriptionId,
         hasEmail: Boolean(email),
         matchesLink,
         matchesPlan,
+        knownSubscription: Boolean(knownSubscription),
       });
       return NextResponse.json({ received: true });
     }
 
-    const businessId = metadataBusinessId ?? (email ? (await prisma.user.findUnique({
-      where: { email },
+    const businessId = metadataBusinessId ?? (email ? (await prisma.user.findFirst({
+      where: { email: { equals: email, mode: "insensitive" } },
       select: { businessesOwned: { select: { id: true } } },
-    }))?.businessesOwned[0]?.id : undefined);
+    }))?.businessesOwned[0]?.id : undefined) ?? knownSubscription?.id;
     if (!businessId) return NextResponse.json({ received: true });
 
     const status = (data.status ?? data.subscription?.status)?.toLowerCase();
-    const defaulted = status === "defaulted" || (status === "paused" && data.statusDetail === "defaulted");
-    const revoke = defaulted || ["cancelled", "finished"].includes(status ?? "");
-    const paymentStatus = data.payment?.status?.toLowerCase();
+    const defaulted = status === "defaulted" || (status === "paused" && data.statusDetail?.toLowerCase() === "defaulted");
+    const paymentStatus = (data.payment?.status ?? data.status)?.toLowerCase();
+    const paymentRevoke = event === "payment.updated" && ["refunded", "chargeback", "charged_back"].includes(paymentStatus ?? "");
+    const revoke = defaulted || paymentRevoke || ["paused", "cancelled", "finished"].includes(status ?? "");
     const activate = (event === "subscription.created" && status === "active") ||
       (event === "subscription.updated" && status === "active") ||
       ((event === "payment.created" || event === "payment.updated") && paymentStatus === "approved");
@@ -92,7 +104,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ sec
       });
     } else if (activate) {
       await prisma.business.updateMany({
-        where: { id: businessId },
+        where: {
+          id: businessId,
+          OR: [{ plan: "trial" }, { mpSubscriptionId: subscriptionId }],
+        },
         data: { plan: "pro", mpSubscriptionId: subscriptionId, proStartedAt: new Date() },
       });
     }
