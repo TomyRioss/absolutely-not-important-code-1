@@ -19,8 +19,10 @@ function subscriptionIdFrom(detail: any): string | undefined {
 export function RebillCheckout({ publicKey, planId, email, name }: { publicKey: string; planId: string; email?: string | null; name?: string | null }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    if (!open) return;
     let checkout: RebillCheckoutElement | undefined;
     let cancelled = false;
     void import("rebill/loader").then(({ defineCustomElements }) => {
@@ -48,7 +50,9 @@ export function RebillCheckout({ publicKey, planId, email, name }: { publicKey: 
       containerRef.current.append(checkout);
     }).catch(() => setError("No se pudo cargar el checkout de Rebill."));
     return () => { cancelled = true; checkout?.remove(); };
-  }, [email, name, planId, publicKey]);
+  }, [email, name, open, planId, publicKey]);
+
+  if (!open) return <Button className="mt-8 w-full" size="lg" onClick={() => setOpen(true)}>Suscribirme</Button>;
 
   return <div ref={containerRef} className="mt-8 min-h-80" aria-live="polite">
     {error ? <p className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</p> : null}
