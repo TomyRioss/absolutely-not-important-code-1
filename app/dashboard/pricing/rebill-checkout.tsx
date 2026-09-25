@@ -12,7 +12,13 @@ type RebillCheckoutElement = HTMLElement & {
   customerInformation?: { email?: string; fullName?: string };
 };
 
-function subscriptionIdFrom(detail: any): string | undefined {
+type RebillSuccessDetail = {
+  subscriptionId?: string;
+  data?: { subscriptionId?: string; result?: { subscriptionId?: string; subscription?: { id?: string } } };
+  result?: { subscriptionId?: string; subscription?: { id?: string } };
+};
+
+function subscriptionIdFrom(detail: RebillSuccessDetail): string | undefined {
   return detail?.subscriptionId ?? detail?.data?.subscriptionId ?? detail?.data?.result?.subscriptionId ?? detail?.result?.subscriptionId ?? detail?.result?.subscription?.id;
 }
 
@@ -36,7 +42,7 @@ export function RebillCheckout({ publicKey, planId, email, name }: { publicKey: 
       checkout.display = { successPage: false };
       checkout.customerInformation = { email: email ?? undefined, fullName: name ?? undefined };
       checkout.addEventListener("success", async (event) => {
-        const subscriptionId = subscriptionIdFrom((event as CustomEvent).detail);
+        const subscriptionId = subscriptionIdFrom((event as CustomEvent<RebillSuccessDetail>).detail);
         if (!subscriptionId) return setError("Rebill confirmó el pago, pero no devolvió la suscripción.");
         const response = await fetch("/api/rebill/confirm", {
           method: "POST",
