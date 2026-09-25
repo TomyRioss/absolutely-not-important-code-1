@@ -52,9 +52,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ sec
       console.error("[webhook rebill] IDs de Rebill no configurados");
       return NextResponse.json({ error: "webhook misconfigured" }, { status: 500 });
     }
-    if (!data || !event || !email || !subscriptionId ||
-        (data.paymentLinkId !== configuredLink && data.planId !== configuredPlan)) {
-      console.warn("[webhook rebill] evento ignorado", { event, subscriptionId });
+    const matchesLink = data?.paymentLinkId === configuredLink;
+    const matchesPlan = data?.planId === configuredPlan;
+    if (!data || !event || !email || !subscriptionId || (!matchesLink && !matchesPlan)) {
+      console.warn("[webhook rebill] evento ignorado", {
+        event,
+        subscriptionId,
+        hasEmail: Boolean(email),
+        matchesLink,
+        matchesPlan,
+      });
       return NextResponse.json({ received: true });
     }
 
