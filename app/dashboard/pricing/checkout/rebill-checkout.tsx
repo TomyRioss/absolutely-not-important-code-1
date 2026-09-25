@@ -8,7 +8,7 @@ type RebillCheckoutElement = HTMLElement & {
   planId: string;
   language: string;
   oneClickCheckout: boolean;
-  display: { successPage: boolean };
+  display: { successPage: boolean; checkoutSummary: boolean };
   customerInformation?: { email?: string; fullName?: string };
 };
 
@@ -40,7 +40,10 @@ export function RebillCheckout({ publicKey, planId, email, name }: { publicKey: 
       checkout.planId = planId;
       checkout.language = "es";
       checkout.oneClickCheckout = false;
-      checkout.display = { successPage: false };
+      checkout.display = { successPage: false, checkoutSummary: false };
+      checkout.style.display = "block";
+      checkout.style.width = "100%";
+      checkout.style.maxWidth = "100%";
       checkout.customerInformation = { email: email ?? undefined, fullName: name ?? undefined };
       checkout.addEventListener("success", (event) => {
         const subscriptionId = getSubscriptionId((event as CustomEvent<RebillSuccessDetail>).detail);
@@ -78,7 +81,7 @@ export function RebillCheckout({ publicKey, planId, email, name }: { publicKey: 
       {validating && <p className="mb-4 rounded-lg bg-muted p-3 text-sm text-text-secondary">Validando tu suscripción...</p>}
       {error && <p className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
       {!loaded && !error && <p className="mb-4 text-sm text-text-secondary">Cargando checkout seguro...</p>}
-      <div ref={containerRef} className="min-h-[460px]" />
+      <div ref={containerRef} className="min-h-[460px] w-full min-w-0 overflow-x-hidden" />
       <noscript><Button disabled>Necesitás JavaScript para pagar</Button></noscript>
     </div>
   );

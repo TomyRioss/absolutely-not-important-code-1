@@ -44,7 +44,7 @@ export default async function RebillCheckoutPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6">
       <Link href="/dashboard/pricing" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary">
         <ArrowLeft className="size-4" />
         Volver a precios
@@ -58,8 +58,8 @@ export default async function RebillCheckoutPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-start">
-        <Card className="order-2 lg:order-1">
+      <div className="grid gap-6 2xl:grid-cols-[minmax(250px,0.7fr)_minmax(480px,1.3fr)] 2xl:items-start">
+        <Card className="order-2 2xl:order-1">
           <CardHeader>
             <CardTitle>Plan Pro · ${PLAN_PRO_PRICE_ARS.toLocaleString("es-AR")}/mes</CardTitle>
           </CardHeader>
@@ -79,7 +79,7 @@ export default async function RebillCheckoutPage() {
           </CardContent>
         </Card>
 
-        <Card className="order-1 overflow-visible lg:order-2">
+        <Card className="order-1 min-w-0 overflow-visible 2xl:order-2">
           <CardHeader>
             <CardTitle>Completá el pago</CardTitle>
             <p className="text-sm text-text-secondary">Tu cuenta: {session.user.email}</p>
