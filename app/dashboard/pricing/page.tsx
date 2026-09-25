@@ -22,7 +22,6 @@ export default async function PricingPage() {
   const trialDaysLeft = business?.trialEndsAt
     ? Math.max(0, Math.ceil((new Date(business.trialEndsAt).getTime() - currentTime()) / 86400000))
     : null;
->>>>>>> fix/TOM-208-rebill-subscriptions
   const isPro = business?.plan === "pro";
 
   return (
