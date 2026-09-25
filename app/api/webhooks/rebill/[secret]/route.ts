@@ -10,9 +10,13 @@ type RebillData = {
   planId?: string;
   paymentLinkId?: string;
   subscriptionId?: string;
-  subscription?: { id?: string; status?: string };
+  subscription?: { id?: string; status?: string; metadata?: Record<string, string> };
   customer?: { email?: string };
-  payment?: { status?: string };
+  payment?: { status?: string; metadata?: Record<string, string> };
+  metadata?: Record<string, string>;
+  paymentMetadata?: Record<string, string>;
+  subscriptionMetadata?: Record<string, string>;
+  customAttributes?: Record<string, string>;
 };
 
 function validSignature(raw: Buffer, received: string | null, secret: string) {
@@ -45,6 +49,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ sec
     const data = payload.data;
     const event = payload.webhook?.event;
     const email = data?.customer?.email?.trim().toLowerCase();
+    const metadata = data?.subscriptionMetadata ?? data?.subscription?.metadata ?? data?.paymentMetadata ?? data?.payment?.metadata ?? data?.metadata ?? data?.customAttributes;
+    const metadataBusinessId = metadata?.platorestBusinessId;
     const subscriptionId = data?.subscriptionId ?? data?.subscription?.id ?? data?.id;
     const configuredLink = process.env.REBILL_PAYMENT_LINK_ID;
     const configuredPlan = process.env.REBILL_PLAN_ID?.trim();
@@ -52,17 +58,23 @@ export async function POST(request: Request, { params }: { params: Promise<{ sec
       console.error("[webhook rebill] IDs de Rebill no configurados");
       return NextResponse.json({ error: "webhook misconfigured" }, { status: 500 });
     }
-    if (!data || !event || !email || !subscriptionId ||
-        (data.paymentLinkId !== configuredLink && data.planId !== configuredPlan)) {
-      console.warn("[webhook rebill] evento ignorado", { event, subscriptionId });
+    const matchesLink = data?.paymentLinkId === configuredLink;
+    const matchesPlan = data?.planId === configuredPlan;
+    if (!data || !event || !subscriptionId || (!matchesLink && !matchesPlan) || (!email && !metadataBusinessId)) {
+      console.warn("[webhook rebill] evento ignorado", {
+        event,
+        subscriptionId,
+        hasEmail: Boolean(email),
+        matchesLink,
+        matchesPlan,
+      });
       return NextResponse.json({ received: true });
     }
 
-    const user = await prisma.user.findUnique({
+    const businessId = metadataBusinessId ?? (email ? (await prisma.user.findUnique({
       where: { email },
       select: { businessesOwned: { select: { id: true } } },
-    });
-    const businessId = user?.businessesOwned[0]?.id;
+    }))?.businessesOwned[0]?.id : undefined);
     if (!businessId) return NextResponse.json({ received: true });
 
     const status = (data.status ?? data.subscription?.status)?.toLowerCase();
