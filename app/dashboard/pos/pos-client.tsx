@@ -15,9 +15,7 @@ export function PosClient({
   products: Product[];
 }) {
   const [items, setItems] = useState<LineItem[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "MERCADOPAGO">(
-    "CASH",
-  );
+  const [paymentMethod] = useState<"CASH">("CASH");
   const [customerPhone, setCustomerPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -162,17 +160,9 @@ export function PosClient({
               <input
                 type="radio"
                 checked={paymentMethod === "CASH"}
-                onChange={() => setPaymentMethod("CASH")}
+                readOnly
               />
               Efectivo
-            </label>
-            <label className="flex items-center gap-2 py-1.5 text-text-primary">
-              <input
-                type="radio"
-                checked={paymentMethod === "MERCADOPAGO"}
-                onChange={() => setPaymentMethod("MERCADOPAGO")}
-              />
-              Mercado Pago
             </label>
           </div>
 

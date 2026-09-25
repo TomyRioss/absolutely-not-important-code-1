@@ -12,7 +12,7 @@ export type CheckoutInput = {
   customerName: string;
   customerPhone?: string;
   customerEmail?: string;
-  paymentMethod: "CASH" | "MERCADOPAGO";
+  paymentMethod: "CASH";
 };
 
 export type CheckoutResult =

@@ -3,8 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
-import { SiMercadopago } from "react-icons/si";
-import { subscribeToPro } from "./actions";
 import { PromoCountdown } from "@/components/promo-countdown";
 
 const currentTime = () => Date.now();
@@ -79,30 +77,9 @@ export default async function PricingPage() {
               Plan activo
             </Button>
           ) : (
-            <form action={subscribeToPro} className="mt-8 space-y-2">
-              <label htmlFor="mpEmail" className="text-sm font-medium text-text-primary">
-                Email de tu cuenta de MercadoPago
-              </label>
-              <input
-                id="mpEmail"
-                name="mpEmail"
-                type="email"
-                required
-                defaultValue={session?.user?.email ?? ""}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-              />
-              <p className="text-xs text-text-secondary">
-                Tiene que coincidir con la cuenta con la que vas a pagar en MercadoPago.
-              </p>
-              <Button
-                type="submit"
-                className="h-16 w-full gap-2 rounded-xl bg-[#009ee3] text-lg font-bold text-white shadow-lg hover:bg-[#008ecb]"
-                size="lg"
-              >
-                <SiMercadopago className="size-10" />
-                Suscribirme con MercadoPago
-              </Button>
-            </form>
+            <p className="mt-8 rounded-lg border border-border bg-surface px-4 py-3 text-center text-sm font-medium text-text-secondary">
+              La suscripción estará disponible próximamente.
+            </p>
           )}
         </CardContent>
       </Card>

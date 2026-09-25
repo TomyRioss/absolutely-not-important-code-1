@@ -20,9 +20,7 @@ export default function CheckoutPage() {
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "MERCADOPAGO">(
-    "CASH",
-  );
+  const [paymentMethod] = useState<"CASH">("CASH");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<{ result: Extract<CheckoutResult, { ok: true }>; whatsappUrl: string | null } | null>(null);
@@ -81,7 +79,7 @@ export default function CheckoutPage() {
           "",
           `Total: $${result.total.toLocaleString("es-AR")}`,
           fulfillment === "DELIVERY" ? `Entrega: ${deliveryAddress}` : "Retiro en local",
-          `Pago: ${paymentMethod === "CASH" ? "Efectivo" : "Mercado Pago"}`,
+          "Pago: Efectivo",
           `Nombre: ${customerName}`,
         ];
         const message = encodeURIComponent(lines.join("\n"));
@@ -264,17 +262,9 @@ export default function CheckoutPage() {
               <input
                 type="radio"
                 checked={paymentMethod === "CASH"}
-                onChange={() => setPaymentMethod("CASH")}
+                readOnly
               />
               Efectivo
-            </label>
-            <label className="flex items-center gap-2 py-1.5 text-text-primary">
-              <input
-                type="radio"
-                checked={paymentMethod === "MERCADOPAGO"}
-                onChange={() => setPaymentMethod("MERCADOPAGO")}
-              />
-              Mercado Pago
             </label>
           </div>
 

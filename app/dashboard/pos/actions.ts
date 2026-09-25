@@ -8,7 +8,7 @@ import { assertOwnsRestaurant } from "@/lib/tenant";
 export type PosOrderInput = {
   restaurantId: string;
   items: { variantId: string; qty: number }[];
-  paymentMethod: "CASH" | "MERCADOPAGO";
+  paymentMethod: "CASH";
   customerPhone?: string;
   customerEmail?: string;
 };

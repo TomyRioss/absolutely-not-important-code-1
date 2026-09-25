@@ -23,7 +23,7 @@ MVP gestion restaurant: fidelizacion + inventario simple + POS liviano + sitio w
 - I.db: Postgres via Supabase, Prisma schema (see below)
 - I.auth: NextAuth (credentials provider), admin routes gated
 - I.storage: Supabase Storage, product images
-- I.pay: MercadoPago checkout, stub if no creds
+- I.pay: cash checkout; Pro billing pending Rebill integration
 - I.geo: Nominatim/OSM geocoding (free, no key) for delivery radius validation (V6). Restaurant gained lat/lng fields (flagged dependency, not in original model)
 - I.routes:
   - / (landing page)
@@ -57,8 +57,8 @@ T2|x|Supabase project conn, env vars, Prisma client singleton|I.db
 T3|x|Tailwind config w/ color tokens (§C palette)|V2
 T4|x|NextAuth setup (admin login, credentials)|I.auth,V7
 T5|x|Public menu page /menu/[restaurantSlug], list active products|I.routes
-T6|x|Checkout flow /checkout: cart, pickup/delivery, radius validation, MercadoPago stub|V6,I.pay
-T7|x|POS screen /admin/pos: manual order entry, cash/MP payment, simple receipt (no fiscal invoice)|V3,I.routes
+T6|x|Checkout flow /checkout: cart, pickup/delivery, radius validation, cash payment|V6,I.pay
+T7|x|POS screen /admin/pos: manual order entry, cash payment, simple receipt (no fiscal invoice)|V3,I.routes
 T8|x|Inventory /admin/inventario: stock CRUD, low-stock alert, auto-decrement on order|V4
 T9|x|Customers/loyalty /admin/clientes: customer by phone/email, points on purchase, order history|V5
 T10|x|Orders panel /admin/pedidos: list/status updates across POS+WEB source|I.routes
