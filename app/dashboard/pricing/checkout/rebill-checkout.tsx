@@ -19,8 +19,22 @@ type RebillSuccessDetail = {
   result?: { subscriptionId?: string; subscription?: { id?: string } };
 };
 
+function findSubscriptionId(value: unknown, parentKey?: string, seen = new Set<object>()): string | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  if (seen.has(value)) return undefined;
+  seen.add(value);
+
+  for (const [key, nestedValue] of Object.entries(value)) {
+    if ((key === "subscriptionId" || key === "id" && parentKey === "subscription") && typeof nestedValue === "string" && nestedValue.trim()) {
+      return nestedValue;
+    }
+    const found = findSubscriptionId(nestedValue, key, seen);
+    if (found) return found;
+  }
+}
+
 function getSubscriptionId(detail: RebillSuccessDetail) {
-  return detail.subscriptionId ?? detail.data?.subscriptionId ?? detail.data?.result?.subscriptionId ?? detail.result?.subscriptionId ?? detail.result?.subscription?.id;
+  return findSubscriptionId(detail);
 }
 
 function normalizeEmail(value?: string | null) {
