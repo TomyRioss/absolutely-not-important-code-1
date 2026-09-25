@@ -4,12 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 import { PromoCountdown } from "@/components/promo-countdown";
+import { PLAN_PRO_PRICE_ARS } from "@/lib/pricing";
 
 const currentTime = () => Date.now();
 
 export default async function PricingPage() {
   const session = await auth();
-
   const membership = session?.user?.id
     ? await prisma.membership.findFirst({
         where: { userId: session.user.id, role: "OWNER" },
@@ -17,15 +17,13 @@ export default async function PricingPage() {
         orderBy: { id: "asc" },
       })
     : null;
-
   const business = membership?.business;
-
+  const rebillPaymentLink = process.env.REBILL_PAYMENT_LINK_URL?.replace(/^\uFEFF/, "").trim();
   let trialDaysLeft: number | null = null;
   if (business?.trialEndsAt) {
     const diff = new Date(business.trialEndsAt).getTime() - currentTime();
     trialDaysLeft = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   }
-
   const isPro = business?.plan === "pro";
 
   return (
@@ -36,15 +34,7 @@ export default async function PricingPage() {
           {isPro
             ? "Ya tenés el Plan Pro activo."
             : trialDaysLeft !== null && trialDaysLeft > 0
-              ? (
-                  <>
-                    Te quedan{" "}
-                    <span className="font-medium text-primary underline underline-offset-2">
-                      {trialDaysLeft} días de prueba
-                    </span>{" "}
-                    gratuita.
-                  </>
-                )
+              ? <>Te quedan <span className="font-medium text-primary underline underline-offset-2">{trialDaysLeft} días de prueba</span> gratuita.</>
               : "Tu prueba gratuita terminó. Suscribite para seguir usando PlatoRest sin límites."}
         </p>
       </div>
@@ -53,33 +43,34 @@ export default async function PricingPage() {
         <CardContent className="p-0">
           <h2 className="text-xl font-bold text-primary">Plan Promocional</h2>
           <p className="mt-1 text-6xl font-extrabold tracking-tight text-primary">
-            $45.000<span className="text-lg font-medium text-text-secondary">/mes</span>
+            ${PLAN_PRO_PRICE_ARS.toLocaleString("es-AR")}<span className="text-lg font-medium text-text-secondary">/mes</span>
           </p>
           <PromoCountdown className="mt-4" />
-
           <ul className="mt-6 space-y-3">
-            {[
-              "Menú digital con QR sin límites",
-              "Pedidos online sin comisiones",
-              "POS, inventario y estadísticas",
-              "Fidelización de clientes",
-              "Soporte 24/7 feriados y fines de semana",
-            ].map((item) => (
+            {["Menú digital con QR sin límites", "Pedidos online sin comisiones", "POS, inventario y estadísticas", "Fidelización de clientes", "Soporte 24/7 feriados y fines de semana"].map((item) => (
               <li key={item} className="flex items-start gap-2 text-sm text-text-primary">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <span>{item}</span>
               </li>
             ))}
           </ul>
-
           {isPro ? (
-            <Button disabled className="mt-8 w-full" size="lg">
-              Plan activo
-            </Button>
+            <Button disabled className="mt-8 w-full" size="lg">Plan activo</Button>
           ) : (
-            <p className="mt-8 rounded-lg border border-border bg-surface px-4 py-3 text-center text-sm font-medium text-text-secondary">
-              La suscripción estará disponible próximamente.
-            </p>
+            <>
+              {rebillPaymentLink ? (
+                <Button className="mt-8 w-full" size="lg" render={<a href={rebillPaymentLink} />}>
+                  Suscribirme
+                </Button>
+              ) : (
+                <Button disabled className="mt-8 w-full" size="lg">
+                  Suscripción no disponible
+                </Button>
+              )}
+              <p className="mt-2 text-center text-xs text-text-secondary">
+                Usá el mismo email de tu cuenta de PlatoRest en Rebill.
+              </p>
+            </>
           )}
         </CardContent>
       </Card>

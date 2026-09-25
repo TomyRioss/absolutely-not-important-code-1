@@ -1,4 +1,4 @@
-export const PLAN_PRO_PRICE_ARS = 19900;
+export const PLAN_PRO_PRICE_ARS = 45000;
 export const PLAN_PRO_ORIGINAL_PRICE_ARS = 45000;
 
 // Fecha fija global: cuenta regresiva de 1 semana desde que se activó la promo.
