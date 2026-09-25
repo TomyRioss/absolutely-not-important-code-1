@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 import { PromoCountdown } from "@/components/promo-countdown";
 import { PLAN_PRO_PRICE_ARS } from "@/lib/pricing";
+import { RebillCheckout } from "./rebill-checkout";
 
 const currentTime = () => Date.now();
 
@@ -18,12 +19,12 @@ export default async function PricingPage() {
       })
     : null;
   const business = membership?.business;
-  const rebillPaymentLink = process.env.REBILL_PAYMENT_LINK_URL?.replace(/^\uFEFF/, "").trim();
-  let trialDaysLeft: number | null = null;
-  if (business?.trialEndsAt) {
-    const diff = new Date(business.trialEndsAt).getTime() - currentTime();
-    trialDaysLeft = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-  }
+  const rebillPublicKey = process.env.NEXT_PUBLIC_REBILL_PUBLIC_KEY?.trim();
+  const rebillPlanId = process.env.REBILL_PLAN_ID?.trim();
+  const trialDaysLeft = business?.trialEndsAt
+    ? Math.max(0, Math.ceil((new Date(business.trialEndsAt).getTime() - currentTime()) / 86400000))
+    : null;
+>>>>>>> fix/TOM-208-rebill-subscriptions
   const isPro = business?.plan === "pro";
 
   return (
@@ -58,17 +59,15 @@ export default async function PricingPage() {
             <Button disabled className="mt-8 w-full" size="lg">Plan activo</Button>
           ) : (
             <>
-              {rebillPaymentLink ? (
-                <Button className="mt-8 w-full" size="lg" render={<a href={rebillPaymentLink} />}>
-                  Suscribirme
-                </Button>
+              {rebillPublicKey && rebillPlanId && business ? (
+                <RebillCheckout publicKey={rebillPublicKey} planId={rebillPlanId} email={session?.user?.email} name={session?.user?.name} />
               ) : (
                 <Button disabled className="mt-8 w-full" size="lg">
                   Suscripción no disponible
                 </Button>
               )}
               <p className="mt-2 text-center text-xs text-text-secondary">
-                Usá el mismo email de tu cuenta de PlatoRest en Rebill.
+                Podés pagar con cualquier email; la suscripción se vincula a tu cuenta de PlatoRest.
               </p>
             </>
           )}
