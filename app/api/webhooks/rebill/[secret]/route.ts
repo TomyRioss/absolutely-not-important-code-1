@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 type RebillData = {
   id?: string;
   status?: string;
+  lastStatus?: string | null;
   statusDetail?: string | null;
   planId?: string;
   paymentLinkId?: string;
@@ -67,8 +68,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ sec
     const status = (data.status ?? data.subscription?.status)?.toLowerCase();
     const defaulted = status === "defaulted" || (status === "paused" && data.statusDetail === "defaulted");
     const revoke = defaulted || ["cancelled", "finished"].includes(status ?? "");
+    const paymentStatus = data.payment?.status?.toLowerCase();
     const activate = (event === "subscription.created" && status === "active") ||
-      (event === "subscription.updated" && status === "active");
+      (event === "subscription.updated" && status === "active") ||
+      ((event === "payment.created" || event === "payment.updated") && paymentStatus === "approved");
 
     if (revoke) {
       await prisma.business.updateMany({
@@ -77,7 +80,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ sec
       });
     } else if (activate) {
       await prisma.business.updateMany({
-        where: { id: businessId, OR: [{ mpSubscriptionId: null }, { mpSubscriptionId: subscriptionId }] },
+        where: { id: businessId },
         data: { plan: "pro", mpSubscriptionId: subscriptionId, proStartedAt: new Date() },
       });
     }
