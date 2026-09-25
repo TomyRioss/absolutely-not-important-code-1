@@ -96,9 +96,9 @@ export function RebillCheckout({ publicKey, planId, email, name }: { publicKey: 
     <div className="min-h-[520px]" aria-live="polite">
       {validating && <p className="mb-4 rounded-lg bg-muted p-3 text-sm text-text-secondary">Validando tu suscripción...</p>}
       {error && <p className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
-      {emailMismatch && <p className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">El correo del pago debe coincidir con el correo de tu cuenta de PlatoRest ({email}).</p>}
       {!loaded && !error && <p className="mb-4 text-sm text-text-secondary">Cargando checkout seguro...</p>}
       <div ref={containerRef} className="min-h-[460px] w-full min-w-0 overflow-x-hidden" />
+      {emailMismatch && <p className="mt-4 break-words rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">El correo del pago no coincide con tu cuenta. Corregilo para continuar.</p>}
       <Button
         className="mt-4 h-12 w-full"
         disabled={!loaded || validating || submitting || emailMismatch}
