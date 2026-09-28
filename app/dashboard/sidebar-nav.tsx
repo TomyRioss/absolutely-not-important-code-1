@@ -71,17 +71,6 @@ export function SidebarNav({
 
   return (
     <nav className={`flex flex-1 flex-col gap-2 ${collapsed ? "px-1" : "px-2"}`}>
-      {onToggle && (
-        <button
-          type="button"
-          onClick={onToggle}
-          title={collapsed ? "Expandir menú" : "Colapsar menú"}
-          aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
-          className="mb-2 flex w-full items-center justify-center rounded-md px-1 py-1 text-white/35 transition-colors hover:text-white/60"
-        >
-          {collapsed ? <PanelLeftOpen className="h-3 w-3 stroke-[1.5]" /> : <PanelLeftClose className="h-3 w-3 stroke-[1.5]" />}
-        </button>
-      )}
       {!collapsed && onboarding && <OnboardingWidget progress={onboarding} variant="compact" />}
       <Link
         href="/dashboard"
@@ -164,6 +153,17 @@ export function SidebarNav({
         <Users className="h-4.5 w-4.5" />
         {!collapsed && <span className="flex-1 text-left">Clientes</span>}
       </Link>
+      {onToggle && (
+        <button
+          type="button"
+          onClick={onToggle}
+          title={collapsed ? "Expandir menú" : "Colapsar menú"}
+          aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
+          className="mt-1 ml-auto mr-[-26px] flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-white text-primary ring-1 ring-black/10 transition-[transform,background-color] duration-150 hover:scale-110 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary active:scale-95"
+        >
+          {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+        </button>
+      )}
     </nav>
   );
 }

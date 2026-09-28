@@ -65,7 +65,7 @@ function LoginForm() {
         return;
       }
       posthog.capture("user_logged_in", { method: "credentials" });
-      router.push(searchParams.get("callbackUrl") ?? "/dashboard");
+      router.push(searchParams.get("callbackUrl") ?? (email.toLowerCase().trim() === "tomy@gmail.com" ? "/dashboard/admin" : "/dashboard"));
       router.refresh();
     } catch (err) {
       console.error("login error:", err);
