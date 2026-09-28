@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { isActivePlanSubscription } from "../lib/rebill/verified-subscription.mjs";
+import { isActivePlanSubscription, isPlanActiveStatus } from "../lib/rebill/verified-subscription.mjs";
 
 const configuredPlan = "plan-pro";
 
@@ -27,4 +27,10 @@ test("rejects active subscription for another plan", () => {
 
 test("rejects malformed API response", () => {
   assert.equal(isActivePlanSubscription({ status: 1 }, configuredPlan), false);
+});
+
+test("only treats explicit server activation as complete", () => {
+  assert.equal(isPlanActiveStatus({ active: true }), true);
+  assert.equal(isPlanActiveStatus({ active: false }), false);
+  assert.equal(isPlanActiveStatus({ active: "true" }), false);
 });

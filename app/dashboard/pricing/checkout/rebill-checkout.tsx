@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { isPlanActiveStatus } from "@/lib/rebill/verified-subscription.mjs";
 
 type RebillCheckoutElement = HTMLElement & {
   publicKey: string;
@@ -72,6 +73,7 @@ export function RebillCheckout({ publicKey, planId, email, name }: { publicKey: 
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [validating, setValidating] = useState(false);
+  const [waitingForWebhook, setWaitingForWebhook] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
   const paymentApprovedRef = useRef(false);
@@ -95,6 +97,34 @@ export function RebillCheckout({ publicKey, planId, email, name }: { publicKey: 
       })
       .catch(() => setError("El pago fue recibido, pero no pudimos validar la activación. Reintentá la validación en unos segundos."))
       .finally(() => setValidating(false));
+  }, []);
+
+  const waitForWebhookActivation = useCallback(() => {
+    setValidating(true);
+    setWaitingForWebhook(true);
+    setError(null);
+
+    void (async () => {
+      try {
+        for (let attempt = 0; attempt < 30; attempt += 1) {
+          const response = await fetch("/api/rebill/status", {
+            cache: "no-store",
+            signal: AbortSignal.timeout(5_000),
+          });
+          if (response.ok && isPlanActiveStatus(await response.json() as { active?: boolean })) {
+            window.location.assign("/dashboard");
+            return;
+          }
+          await new Promise((resolve) => window.setTimeout(resolve, 2_000));
+        }
+        setError("Rebill recibió el pago y estamos esperando su confirmación. No vuelvas a pagar; reintentá la validación en unos segundos.");
+      } catch {
+        setError("Rebill recibió el pago y estamos esperando su confirmación. No vuelvas a pagar; reintentá la validación en unos segundos.");
+      } finally {
+        setValidating(false);
+        setWaitingForWebhook(false);
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -139,7 +169,7 @@ export function RebillCheckout({ publicKey, planId, email, name }: { publicKey: 
         const subscriptionId = getSubscriptionId((event as CustomEvent<RebillSuccessDetail>).detail, checkout);
         const paymentId = getPaymentId((event as CustomEvent<RebillSuccessDetail>).detail, checkout);
         if (!subscriptionId && !paymentId) {
-          setError("El pago fue recibido, pero Rebill todavía no informó la suscripción. No vuelvas a pagar; reintentá la validación en unos segundos.");
+          waitForWebhookActivation();
           return;
         }
 
@@ -166,11 +196,11 @@ export function RebillCheckout({ publicKey, planId, email, name }: { publicKey: 
       if (readyTimeout !== undefined) window.clearTimeout(readyTimeout);
       checkout?.remove();
     };
-  }, [confirmSubscription, email, name, planId, publicKey]);
+  }, [confirmSubscription, email, name, planId, publicKey, waitForWebhookActivation]);
 
   return (
     <div className="min-h-[520px]">
-      {validating && <p role="status" className="mb-4 rounded-lg bg-muted p-3 text-sm text-text-secondary">Validando tu suscripción...</p>}
+      {validating && <p role="status" className="mb-4 rounded-lg bg-muted p-3 text-sm text-text-secondary">{waitingForWebhook ? "Pago recibido. Esperando la confirmación segura de Rebill..." : "Validando tu suscripción..."}</p>}
       {error && <p role="alert" className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
       {!loaded && !error && <p className="mb-4 text-sm text-text-secondary">Cargando checkout seguro...</p>}
       <div ref={containerRef} className="min-h-[460px] w-full min-w-0 overflow-x-hidden" />
@@ -195,7 +225,7 @@ export function RebillCheckout({ publicKey, planId, email, name }: { publicKey: 
             const subscriptionId = getSubscriptionId({}, checkout);
             const paymentId = getPaymentId({}, checkout);
             if (!subscriptionId && !paymentId) {
-              setError("Rebill todavía no informó la suscripción. No vuelvas a pagar; reintentá en unos segundos.");
+              waitForWebhookActivation();
               return;
             }
             setError(null);

@@ -8,3 +8,4 @@ type SubscriptionPayload = Subscription & {
 };
 
 export function isActivePlanSubscription(payload: SubscriptionPayload, expectedPlanId: string): boolean;
+export function isPlanActiveStatus(payload: { active?: boolean }): boolean;
