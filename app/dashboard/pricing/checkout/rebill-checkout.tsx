@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 type RebillCheckoutElement = HTMLElement & {
@@ -11,6 +11,8 @@ type RebillCheckoutElement = HTMLElement & {
   display: { successPage: boolean; checkoutSummary: boolean; submitButton: boolean };
   customerInformation?: { email?: string; fullName?: string };
   submit: () => Promise<void>;
+  apmPayment?: { subscriptionId?: string | null } | null;
+  responseCheckoutCard?: { result?: { subscriptionId?: string | null } } | null;
 };
 
 type RebillSuccessDetail = {
@@ -33,8 +35,10 @@ function findSubscriptionId(value: unknown, parentKey?: string, seen = new Set<o
   }
 }
 
-function getSubscriptionId(detail: RebillSuccessDetail) {
-  return findSubscriptionId(detail);
+function getSubscriptionId(detail: RebillSuccessDetail, checkout?: RebillCheckoutElement | null) {
+  return findSubscriptionId(detail)
+    ?? findSubscriptionId(checkout?.apmPayment)
+    ?? findSubscriptionId(checkout?.responseCheckoutCard);
 }
 
 function normalizeEmail(value?: string | null) {
@@ -47,12 +51,33 @@ export function RebillCheckout({ publicKey, planId, email, name }: { publicKey: 
   const [loaded, setLoaded] = useState(false);
   const [validating, setValidating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
+  const paymentApprovedRef = useRef(false);
+  const [paymentApproved, setPaymentApproved] = useState(false);
+  const [approvedSubscriptionId, setApprovedSubscriptionId] = useState<string | null>(null);
   const [checkoutEmail, setCheckoutEmail] = useState(email ?? "");
   const emailMismatch = normalizeEmail(checkoutEmail) !== normalizeEmail(email);
+
+  const confirmSubscription = useCallback((subscriptionId: string) => {
+    setValidating(true);
+    void fetch("/api/rebill/confirm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subscriptionId }),
+      signal: AbortSignal.timeout(20_000),
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error("confirm_failed");
+        window.location.assign("/dashboard");
+      })
+      .catch(() => setError("El pago fue recibido, pero no pudimos validar la activación. Reintentá la validación en unos segundos."))
+      .finally(() => setValidating(false));
+  }, []);
 
   useEffect(() => {
     let checkout: RebillCheckoutElement | undefined;
     let cancelled = false;
+    let readyTimeout: number | undefined;
 
     void import("rebill/loader").then(({ defineCustomElements }) => {
       if (cancelled || !containerRef.current) return;
@@ -67,68 +92,117 @@ export function RebillCheckout({ publicKey, planId, email, name }: { publicKey: 
       checkout.style.width = "100%";
       checkout.style.maxWidth = "100%";
       checkout.customerInformation = { email: email ?? undefined, fullName: name ?? undefined };
+      checkout.addEventListener("ready", () => {
+        if (cancelled) return;
+        if (readyTimeout !== undefined) window.clearTimeout(readyTimeout);
+        setLoaded(true);
+      }, { once: true });
       checkout.addEventListener("formChange", (event) => {
-        const formData = (event as CustomEvent<{ data?: { email?: string } }>).detail?.data;
+        const detail = (event as CustomEvent<{ data?: { email?: string }; isValid?: boolean }>).detail;
+        const formData = detail?.data;
         if (typeof formData?.email === "string") setCheckoutEmail(formData.email);
+        if (submittingRef.current && detail?.isValid === false) {
+          submittingRef.current = false;
+          setSubmitting(false);
+          setError("Revisá los campos marcados para continuar con el pago.");
+        }
       });
       checkout.addEventListener("success", (event) => {
+        if (paymentApprovedRef.current) return;
+        paymentApprovedRef.current = true;
+        setPaymentApproved(true);
+        submittingRef.current = false;
         setSubmitting(false);
-        const subscriptionId = getSubscriptionId((event as CustomEvent<RebillSuccessDetail>).detail);
+        const subscriptionId = getSubscriptionId((event as CustomEvent<RebillSuccessDetail>).detail, checkout);
         if (!subscriptionId) {
-          setError("Rebill confirmó el pago, pero no devolvió la suscripción.");
+          setError("El pago fue recibido, pero Rebill todavía no informó la suscripción. No vuelvas a pagar; reintentá la validación en unos segundos.");
           return;
         }
 
-        setValidating(true);
-        void fetch("/api/rebill/confirm", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ subscriptionId }),
-        })
-          .then((response) => {
-            if (!response.ok) throw new Error("confirm_failed");
-            window.location.assign("/dashboard");
-          })
-          .catch(() => setError("El pago fue recibido, pero todavía estamos validando la activación. Recargá en unos segundos."))
-          .finally(() => setValidating(false));
+        setApprovedSubscriptionId(subscriptionId);
+        confirmSubscription(subscriptionId);
       });
       checkout.addEventListener("error", () => {
+        if (cancelled) return;
+        submittingRef.current = false;
         setSubmitting(false);
         setError("Rebill rechazó el pago. Revisá los datos e intentá nuevamente.");
       });
       containerRef.current.append(checkout);
-      setLoaded(true);
-    }).catch(() => setError("No se pudo cargar el checkout de Rebill."));
+      readyTimeout = window.setTimeout(() => {
+        if (!cancelled) setError("Rebill está tardando en preparar el pago. Recargá la página e intentá nuevamente.");
+      }, 30_000);
+    }).catch(() => {
+      if (!cancelled) setError("No se pudo cargar el checkout de Rebill. Recargá la página e intentá nuevamente.");
+    });
 
     return () => {
       cancelled = true;
+      if (readyTimeout !== undefined) window.clearTimeout(readyTimeout);
       checkout?.remove();
     };
-  }, [email, name, planId, publicKey]);
+  }, [confirmSubscription, email, name, planId, publicKey]);
 
   return (
-    <div className="min-h-[520px]" aria-live="polite">
-      {validating && <p className="mb-4 rounded-lg bg-muted p-3 text-sm text-text-secondary">Validando tu suscripción...</p>}
-      {error && <p className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
+    <div className="min-h-[520px]">
+      {validating && <p role="status" className="mb-4 rounded-lg bg-muted p-3 text-sm text-text-secondary">Validando tu suscripción...</p>}
+      {error && <p role="alert" className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
       {!loaded && !error && <p className="mb-4 text-sm text-text-secondary">Cargando checkout seguro...</p>}
       <div ref={containerRef} className="min-h-[460px] w-full min-w-0 overflow-x-hidden" />
       {emailMismatch && <p className="mt-4 break-words rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">El correo del pago no coincide con tu cuenta. Corregilo para continuar.</p>}
-      <Button
-        className="mt-4 h-12 w-full"
-        disabled={!loaded || validating || submitting || emailMismatch}
-        onClick={() => {
-          if (!checkoutEmail || emailMismatch) return;
-          setError(null);
-          setSubmitting(true);
-          const checkout = containerRef.current?.firstElementChild as RebillCheckoutElement | null;
-          void checkout?.submit().catch(() => {
-            setSubmitting(false);
-            setError("No se pudo iniciar el pago. Revisá los datos e intentá nuevamente.");
-          });
-        }}
-      >
-        {submitting ? "Procesando..." : "Continuar"}
-      </Button>
+      {paymentApproved ? approvedSubscriptionId ? (
+        <Button
+          className="mt-4 h-12 w-full"
+          disabled={validating}
+          onClick={() => {
+            setError(null);
+            confirmSubscription(approvedSubscriptionId);
+          }}
+        >
+          {validating ? "Validando..." : "Reintentar validación"}
+        </Button>
+      ) : (
+        <Button
+          className="mt-4 h-12 w-full"
+          disabled={validating}
+          onClick={() => {
+            const checkout = containerRef.current?.firstElementChild as RebillCheckoutElement | null;
+            const subscriptionId = getSubscriptionId({}, checkout);
+            if (!subscriptionId) {
+              setError("Rebill todavía no informó la suscripción. No vuelvas a pagar; reintentá en unos segundos.");
+              return;
+            }
+            setError(null);
+            setApprovedSubscriptionId(subscriptionId);
+            confirmSubscription(subscriptionId);
+          }}
+        >
+          {validating ? "Validando..." : "Reintentar validación"}
+        </Button>
+      ) : (
+        <Button
+          className="mt-4 h-12 w-full"
+          disabled={!loaded || validating || submitting || emailMismatch}
+          onClick={() => {
+            if (!checkoutEmail || emailMismatch) return;
+            setError(null);
+            const checkout = containerRef.current?.firstElementChild as RebillCheckoutElement | null;
+            if (!checkout) {
+              setError("No se pudo iniciar el pago. Recargá la página e intentá nuevamente.");
+              return;
+            }
+            submittingRef.current = true;
+            setSubmitting(true);
+            void checkout.submit().catch(() => {
+              submittingRef.current = false;
+              setSubmitting(false);
+              setError("No se pudo iniciar el pago. Revisá los datos e intentá nuevamente.");
+            });
+          }}
+        >
+          {submitting ? "Procesando..." : "Continuar"}
+        </Button>
+      )}
       <noscript><Button disabled>Necesitás JavaScript para pagar</Button></noscript>
     </div>
   );
