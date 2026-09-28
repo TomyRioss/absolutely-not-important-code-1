@@ -7,6 +7,7 @@ import { DEFAULT_PRODUCTS } from "@/lib/default-products";
 import { ensureFeaturedCategory } from "@/lib/featured-category";
 import { seedDefaultRewards } from "@/lib/default-rewards";
 import { getPostHogClient } from "@/lib/posthog-server";
+import { getTrialEndsAt } from "@/lib/trial";
 
 export async function POST(req: Request) {
   try {
@@ -63,7 +64,7 @@ export async function POST(req: Request) {
         businessSlug = `${baseBusinessSlug}-${businessSuffix++}`;
       }
 
-      const trialEndsAt = new Date(Date.now() + 24 * 24 * 60 * 60 * 1000);
+      const trialEndsAt = getTrialEndsAt();
       try {
         const business = await prisma.business.create({
           data: {
