@@ -197,6 +197,9 @@ export function RebillCheckout({ publicKey, planId, email, name }: { publicKey: 
               submittingRef.current = false;
               setSubmitting(false);
               setError("No se pudo iniciar el pago. Revisá los datos e intentá nuevamente.");
+            }).finally(() => {
+              submittingRef.current = false;
+              setSubmitting(false);
             });
           }}
         >
