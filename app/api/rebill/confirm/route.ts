@@ -15,6 +15,19 @@ type SubscriptionResponse = {
   customerEmail?: string;
 };
 
+type PaymentResponse = {
+  result?: {
+    id?: string;
+    status?: string;
+    subscriptionId?: string;
+    subscription?: { id?: string };
+  };
+  id?: string;
+  status?: string;
+  subscriptionId?: string;
+  subscription?: { id?: string };
+};
+
 function normalizeEmail(value?: string | null) {
   return value?.trim().toLowerCase() ?? "";
 }
@@ -25,11 +38,12 @@ export async function POST(request: Request) {
     const userId = session?.user?.id;
     if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-    const body = await request.json().catch(() => null) as { subscriptionId?: string } | null;
-    const subscriptionId = body?.subscriptionId?.trim();
+    const body = await request.json().catch(() => null) as { subscriptionId?: string; paymentId?: string } | null;
+    let subscriptionId = body?.subscriptionId?.trim();
+    const paymentId = body?.paymentId?.trim();
     const apiKey = process.env.REBILL_SECRET_KEY?.trim();
     const planId = process.env.REBILL_PLAN_ID?.trim();
-    if (!subscriptionId || !apiKey || !planId) return NextResponse.json({ error: "Rebill no está configurado" }, { status: 500 });
+    if ((!subscriptionId && !paymentId) || !apiKey || !planId) return NextResponse.json({ error: "Rebill no está configurado" }, { status: 500 });
 
     const membership = await prisma.membership.findFirst({
       where: { userId, role: "OWNER" },
@@ -37,6 +51,23 @@ export async function POST(request: Request) {
       orderBy: { id: "asc" },
     });
     if (!membership) return NextResponse.json({ error: "negocio no encontrado" }, { status: 404 });
+
+    if (!subscriptionId && paymentId) {
+      const paymentResponse = await fetch(`https://api.rebill.com/v3/payments/${encodeURIComponent(paymentId)}`, {
+        headers: { "x-api-key": apiKey },
+        cache: "no-store",
+      });
+      if (!paymentResponse.ok) return NextResponse.json({ error: "No se pudo validar el pago" }, { status: 502 });
+
+      const paymentPayload = await paymentResponse.json() as PaymentResponse;
+      const payment = paymentPayload.result ?? paymentPayload;
+      if (payment.status?.toLowerCase() !== "approved") {
+        return NextResponse.json({ error: "El pago todavía no está aprobado" }, { status: 409 });
+      }
+
+      subscriptionId = payment.subscriptionId ?? payment.subscription?.id;
+      if (!subscriptionId) return NextResponse.json({ error: "Rebill todavía no vinculó el pago con la suscripción" }, { status: 409 });
+    }
 
     const response = await fetch(`https://api.rebill.com/v3/subscriptions/${encodeURIComponent(subscriptionId)}`, {
       headers: { "x-api-key": apiKey },
