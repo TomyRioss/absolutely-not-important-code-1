@@ -1,5 +1,0 @@
-[mcp_servers.linear-server]
-url = "https://mcp.linear.app/mcp"
-
-[mcp_servers.sentry]
-url = "https://mcp.sentry.dev/mcp"
