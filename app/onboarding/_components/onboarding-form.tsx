@@ -30,6 +30,7 @@ export default function OnboardingForm({
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [pwError, setPwError] = useState("");
   const [pwLoading, setPwLoading] = useState(false);
 
@@ -38,6 +39,14 @@ export default function OnboardingForm({
   const [error, setError] = useState("");
   const finishingRef = useRef(false);
   const [finishing, setFinishing] = useState(false);
+  const totalSteps = passwordOnly ? 1 : !hasPassword ? 3 : skipContact ? 1 : 2;
+  const currentStep = passwordOnly
+    ? 1
+    : step === 0
+      ? 1
+      : step === 1
+        ? (hasPassword ? 1 : 2)
+        : totalSteps;
 
   async function handlePasswordSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -113,12 +122,25 @@ export default function OnboardingForm({
       </span>
 
       <div className="w-full max-w-lg text-left">
+        <div className="mb-3">
+          <p className="text-sm font-medium text-text-secondary">Paso {currentStep} de {totalSteps}</p>
+          <div
+            className="mt-2 h-1.5 overflow-hidden rounded-full bg-border"
+            role="progressbar"
+            aria-label="Progreso del registro"
+            aria-valuemin={1}
+            aria-valuemax={totalSteps}
+            aria-valuenow={currentStep}
+          >
+            <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${(currentStep / totalSteps) * 100}%` }} />
+          </div>
+        </div>
         <h1 className="text-3xl font-bold text-text-primary">
           {step === 0 ? "Creá una contraseña" : step === 1 ? "Ingresa tus datos faltantes" : "Dirección del local"}
         </h1>
         <p className="mt-2 text-text-secondary">
           {step === 0
-            ? "La vas a necesitar para iniciar sesión sin Google, por ejemplo si querés probar la tienda de puntos como cliente."
+            ? "Para terminar el alta, creá una contraseña. También vas a poder iniciar sesión con tu email si alguna vez no usás Google."
             : step === 1
               ? hasName
                 ? "Ingresá estos datos para que tus clientes puedan reconocerte."
@@ -128,7 +150,7 @@ export default function OnboardingForm({
 
         {step === 0 && (
           <form onSubmit={handlePasswordSubmit} className="mt-8 text-left">
-            <div className="rounded-2xl bg-background p-8 shadow-sm">
+            <div className="rounded-2xl bg-background p-8 ring-1 ring-foreground/10">
               <div className="space-y-5">
                 <div className="relative">
                   <label
@@ -140,6 +162,8 @@ export default function OnboardingForm({
                   <input
                     id="password"
                     type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    minLength={6}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -165,7 +189,9 @@ export default function OnboardingForm({
                   </label>
                   <input
                     id="confirmPassword"
-                    type={showPassword ? "text" : "password"}
+                    type={showConfirmPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    minLength={6}
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -174,11 +200,11 @@ export default function OnboardingForm({
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword((v) => !v)}
+                    onClick={() => setShowConfirmPassword((v) => !v)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary"
-                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                   >
-                    {showPassword ? <HiEyeSlash className="h-5 w-5" /> : <HiEye className="h-5 w-5" />}
+                    {showConfirmPassword ? <HiEyeSlash className="h-5 w-5" /> : <HiEye className="h-5 w-5" />}
                   </button>
                 </div>
               </div>
@@ -201,7 +227,7 @@ export default function OnboardingForm({
 
         {step === 1 && (
           <form onSubmit={handleStep1Submit} className="mt-8 text-left">
-            <div className="rounded-2xl bg-background p-8 shadow-sm">
+            <div className="rounded-2xl bg-background p-8 ring-1 ring-foreground/10">
               <div className="space-y-5">
                 <div className="relative">
                   <label
@@ -277,7 +303,7 @@ export default function OnboardingForm({
 
         {step === 2 && (
           <div className="mt-8 text-left">
-            <div className="rounded-2xl bg-background p-8 shadow-sm">
+            <div className="rounded-2xl bg-background p-8 ring-1 ring-foreground/10">
               <AddressAutocomplete
                 value={address}
                 onChange={(addr, c) => {
@@ -288,7 +314,17 @@ export default function OnboardingForm({
             </div>
 
             {error && (
-              <p className="mt-3 text-sm font-medium text-red-600">{error}</p>
+              <p role="alert" className="mt-3 text-sm font-medium text-red-600">{error}</p>
+            )}
+
+            <p className="mt-3 text-sm text-text-secondary">
+              Al continuar, terminamos el registro y creamos tu local con un menú inicial. La dirección es opcional y podés agregarla después.
+            </p>
+
+            {finishing && (
+              <p role="status" aria-live="polite" className="mt-3 text-sm font-medium text-text-primary">
+                Estamos terminando tu registro y preparando el menú. No cierres esta página.
+              </p>
             )}
 
             <div className="mt-4 flex items-center justify-end gap-3">
@@ -296,17 +332,19 @@ export default function OnboardingForm({
                 type="button"
                 onClick={finishOnboarding}
                 disabled={finishing}
+                aria-busy={finishing}
                 className="text-sm font-semibold text-text-secondary hover:text-text-primary"
               >
-                Omitir este paso
+                {finishing ? "Creando el local…" : "Omitir dirección"}
               </button>
               <button
                 type="button"
                 onClick={finishOnboarding}
                 disabled={finishing}
+                aria-busy={finishing}
                 className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-hover"
               >
-                Continuar
+                {finishing ? "Creando…" : "Crear mi local"}
                 <HiArrowRight className="h-4 w-4" />
               </button>
             </div>
