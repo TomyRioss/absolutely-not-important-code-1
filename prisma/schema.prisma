@@ -99,6 +99,8 @@ model User {
   name          String
   image         String?
   createdAt     DateTime  @default(now())
+  lastLoginAt   DateTime?
+  platformRole  PlatformRole @default(USER)
 
   accounts         Account[]
   sessions         Session[]
@@ -109,6 +111,11 @@ model User {
   registerSessions RegisterSession[]
   stockMovements   StockMovement[]
   auditLogs        AuditLog[]
+}
+
+enum PlatformRole {
+  USER
+  ADMIN
 }
 
 model Account {

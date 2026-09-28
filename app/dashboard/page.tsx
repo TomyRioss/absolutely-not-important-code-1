@@ -6,8 +6,15 @@ import { QrDownloadButton } from "./qr-download-button";
 import { LinkPreviewCard } from "./link-preview-card";
 import { OnboardingWidget } from "./onboarding-widget";
 import { getOnboardingProgress } from "@/lib/onboarding";
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export default async function AdminHome() {
+  const session = await auth();
+  if (session?.user?.id) {
+    const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { platformRole: true } });
+    if (user?.platformRole === "ADMIN") redirect("/dashboard/admin");
+  }
   const businessId = await requireBusinessId();
 
   const restaurant = await prisma.restaurant.findFirst({
