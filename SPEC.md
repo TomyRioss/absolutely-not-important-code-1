@@ -51,6 +51,7 @@ V8: fuera-of-scope features (mesas, KDS, gift cards, marketplace integrations, e
 V9: any secret/hash value in .env* files containing literal `$` must escape it as `\$` (Next's dotenv-expand strips unescaped `$var` patterns)
 V10: Rebill checkout invalid form submit → release host loading state & show recovery guidance
 V11: server data passed to Client Components contains only serializable values; convert Prisma Decimal to number/string
+V12: Rebill webhook activates an unknown subscription only after API confirms active status and configured plan
 
 ## §T Tasks
 id|status|desc|cites
@@ -71,3 +72,4 @@ id|date|cause|fix
 B1|2026-07-06|Next.js env loader (dotenv-expand) treats `$` in .env values as var refs, silently emptied ADMIN_PASSWORD_HASH (bcrypt hash contains `$`)|escape as `\$` in .env files; see V9
 B2|2026-09-27|Rebill validation blocks submit without success/error event; host loader stays active|formChange invalid → release loader; see V10
 B3|2026-09-28|platform snapshot passes Prisma Decimal variant price across Server/Client boundary|convert variant price to number; see V11
+B4|2026-09-28|Rebill webhook discarded subscription when event plan/link fields did not match|verify subscription against Rebill API; see V12

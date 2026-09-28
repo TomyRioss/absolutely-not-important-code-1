@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isActivePlanSubscription } from "@/lib/rebill/verified-subscription.mjs";
 
 type RebillData = {
   id?: string;
@@ -17,6 +18,15 @@ type RebillData = {
   paymentMetadata?: Record<string, string>;
   subscriptionMetadata?: Record<string, string>;
   customAttributes?: Record<string, string>;
+};
+
+type SubscriptionResponse = {
+  result?: {
+    plan?: { id?: string };
+    status?: string;
+  };
+  plan?: { id?: string };
+  status?: string;
 };
 
 function validSignature(raw: Buffer, received: string | null, secret: string) {
@@ -61,6 +71,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ sec
     const subscriptionId = data?.subscriptionId ?? data?.subscription?.id ?? data?.id;
     const configuredLink = process.env.REBILL_PAYMENT_LINK_ID?.trim();
     const configuredPlan = process.env.REBILL_PLAN_ID?.trim();
+    const apiKey = process.env.REBILL_SECRET_KEY?.trim();
     if (!configuredLink && !configuredPlan) {
       console.error("[webhook rebill] REBILL_PAYMENT_LINK_ID o REBILL_PLAN_ID requerido");
       return NextResponse.json({ error: "webhook misconfigured" }, { status: 500 });
@@ -70,13 +81,34 @@ export async function POST(request: Request, { params }: { params: Promise<{ sec
     const knownSubscription = subscriptionId
       ? await prisma.business.findUnique({ where: { mpSubscriptionId: subscriptionId }, select: { id: true } })
       : null;
-    if (!data || !event || !subscriptionId || (!matchesLink && !matchesPlan && !knownSubscription) || (!email && !metadataBusinessId && !knownSubscription)) {
+    let verifiedSubscriptionStatus: string | undefined;
+    if (!knownSubscription && data && subscriptionId) {
+      if (!configuredPlan || !apiKey) {
+        console.error("[webhook rebill] REBILL_PLAN_ID and REBILL_SECRET_KEY are required for subscription validation");
+        return NextResponse.json({ error: "webhook misconfigured" }, { status: 500 });
+      }
+      const response = await fetch(`https://api.rebill.com/v3/subscriptions/${encodeURIComponent(subscriptionId)}`, {
+        headers: { "x-api-key": apiKey },
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        return NextResponse.json({ error: "subscription validation unavailable" }, { status: 502 });
+      }
+      const payload = await response.json() as SubscriptionResponse;
+      const subscription = payload.result ?? payload;
+      if (isActivePlanSubscription(subscription, configuredPlan)) {
+        verifiedSubscriptionStatus = subscription.status?.toLowerCase();
+      }
+    }
+    const verifiedPlan = Boolean(verifiedSubscriptionStatus);
+    if (!data || !event || !subscriptionId || (!verifiedPlan && !knownSubscription) || (!email && !metadataBusinessId && !knownSubscription)) {
       console.warn("[webhook rebill] evento ignorado", {
         event,
         subscriptionId,
         hasEmail: Boolean(email),
         matchesLink,
-        matchesPlan,
+        matchesPlan: verifiedPlan,
+        payloadMatchesPlan: matchesPlan,
         knownSubscription: Boolean(knownSubscription),
       });
       return NextResponse.json({ received: true });
@@ -88,7 +120,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ sec
     }))?.businessesOwned[0]?.id : undefined) ?? knownSubscription?.id;
     if (!businessId) return NextResponse.json({ received: true });
 
-    const status = (data.status ?? data.subscription?.status)?.toLowerCase();
+    const status = verifiedSubscriptionStatus ?? (data.status ?? data.subscription?.status)?.toLowerCase();
     const defaulted = status === "defaulted" || (status === "paused" && data.statusDetail?.toLowerCase() === "defaulted");
     const paymentStatus = (data.payment?.status ?? data.status)?.toLowerCase();
     const paymentRevoke = event === "payment.updated" && ["refunded", "chargeback", "charged_back"].includes(paymentStatus ?? "");
