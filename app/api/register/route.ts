@@ -8,6 +8,7 @@ import { DEFAULT_PRODUCTS } from "@/lib/default-products";
 import { ensureFeaturedCategory } from "@/lib/featured-category";
 import { seedDefaultRewards } from "@/lib/default-rewards";
 import { normalizeOptionalPhone } from "@/lib/phone";
+import { getTrialEndsAt } from "@/lib/trial";
 
 export async function POST(req: Request) {
   try {
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
       businessSlug = `${baseSlug}-${businessSuffix++}`;
     }
 
-    const trialEndsAt = new Date(Date.now() + 24 * 24 * 60 * 60 * 1000);
+    const trialEndsAt = getTrialEndsAt();
 
     const user = await prisma.user.create({
       data: {
