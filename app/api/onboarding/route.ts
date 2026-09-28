@@ -7,6 +7,7 @@ import { DEFAULT_PRODUCTS } from "@/lib/default-products";
 import { ensureFeaturedCategory } from "@/lib/featured-category";
 import { seedDefaultRewards } from "@/lib/default-rewards";
 import { getPostHogClient } from "@/lib/posthog-server";
+import { normalizeOptionalPhone } from "@/lib/phone";
 
 export async function POST(req: Request) {
   try {
@@ -16,6 +17,7 @@ export async function POST(req: Request) {
     }
 
     const { address, lat, lng, fullName, phone, restaurantName } = await req.json();
+    const normalizedPhone = normalizeOptionalPhone(phone);
 
     const user = await prisma.user.findUnique({ where: { email: session.user.email } });
     if (!user) {
@@ -39,11 +41,11 @@ export async function POST(req: Request) {
         });
       }
 
-      if (phone && phone !== user.phone) {
+      if (normalizedPhone && normalizedPhone !== user.phone) {
         try {
           await prisma.user.update({
             where: { id: user.id },
-            data: { phone },
+            data: { phone: normalizedPhone },
           });
         } catch (err) {
           const isUniqueConstraintError =
@@ -54,6 +56,8 @@ export async function POST(req: Request) {
             userId: user.id,
           });
         }
+      } else if (!normalizedPhone && user.phone && !normalizeOptionalPhone(user.phone)) {
+        await prisma.user.update({ where: { id: user.id }, data: { phone: null } });
       }
 
       const baseBusinessSlug = slugify(restaurantName) || "negocio";

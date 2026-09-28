@@ -7,10 +7,12 @@ import { DEFAULT_CATEGORIES } from "@/lib/default-categories";
 import { DEFAULT_PRODUCTS } from "@/lib/default-products";
 import { ensureFeaturedCategory } from "@/lib/featured-category";
 import { seedDefaultRewards } from "@/lib/default-rewards";
+import { normalizeOptionalPhone } from "@/lib/phone";
 
 export async function POST(req: Request) {
   try {
     const { name, email, password, restaurantName, phone } = await req.json();
+    const normalizedPhone = normalizeOptionalPhone(phone);
 
     if (!name || !email || !password || !restaurantName) {
       return NextResponse.json({ error: "Faltan datos requeridos." }, { status: 400 });
@@ -36,7 +38,7 @@ export async function POST(req: Request) {
       data: {
         email,
         name,
-        phone: phone || undefined,
+        phone: normalizedPhone,
         passwordHash,
       },
     });
