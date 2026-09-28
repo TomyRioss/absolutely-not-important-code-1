@@ -1,0 +1,7 @@
+ALTER TABLE "Business"
+ADD COLUMN "ownerId" TEXT NOT NULL;
+
+ALTER TABLE "Business"
+ADD CONSTRAINT "Business_ownerId_fkey"
+FOREIGN KEY ("ownerId") REFERENCES "User"("id")
+ON DELETE CASCADE ON UPDATE CASCADE;
