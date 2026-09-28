@@ -68,6 +68,7 @@ export async function POST(request: Request) {
       subscriptionId = payment.subscriptionId ?? payment.subscription?.id;
       if (!subscriptionId) return NextResponse.json({ error: "Rebill todavía no vinculó el pago con la suscripción" }, { status: 409 });
     }
+    if (!subscriptionId) return NextResponse.json({ error: "Rebill no informó la suscripción" }, { status: 409 });
 
     const response = await fetch(`https://api.rebill.com/v3/subscriptions/${encodeURIComponent(subscriptionId)}`, {
       headers: { "x-api-key": apiKey },
