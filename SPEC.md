@@ -49,6 +49,8 @@ V6: delivery order requires deliveryAddress within restaurant.deliveryRadiusKm (
 V7: /admin/* routes require NextAuth session, redirect if absent
 V8: fuera-of-scope features (mesas, KDS, gift cards, marketplace integrations, etc) never implemented unless flagged+approved as dependency
 V9: any secret/hash value in .env* files containing literal `$` must escape it as `\$` (Next's dotenv-expand strips unescaped `$var` patterns)
+V10: Rebill checkout invalid form submit → release host loading state & show recovery guidance
+V11: server data passed to Client Components contains only serializable values; convert Prisma Decimal to number/string
 
 ## §T Tasks
 id|status|desc|cites
@@ -67,3 +69,5 @@ T11|x|Deploy config for Vercel (env, build)|§C
 ## §B Bugs
 id|date|cause|fix
 B1|2026-07-06|Next.js env loader (dotenv-expand) treats `$` in .env values as var refs, silently emptied ADMIN_PASSWORD_HASH (bcrypt hash contains `$`)|escape as `\$` in .env files; see V9
+B2|2026-09-27|Rebill validation blocks submit without success/error event; host loader stays active|formChange invalid → release loader; see V10
+B3|2026-09-28|platform snapshot passes Prisma Decimal variant price across Server/Client boundary|convert variant price to number; see V11

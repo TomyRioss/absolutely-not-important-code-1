@@ -1,0 +1,7 @@
+/.claude
+/.agents
+/.superpowers
+/.playwright-mcp
+/docs/CREDENTIALS.md
+/debug.log
+/tsconfig.tsbuildinfo

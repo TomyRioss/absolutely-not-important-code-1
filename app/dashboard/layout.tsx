@@ -13,6 +13,7 @@ import { MobileNav } from "./mobile-nav";
 import { DashboardShell } from "./dashboard-shell";
 import { prisma } from "@/lib/prisma";
 import { getOnboardingProgress } from "@/lib/onboarding";
+import { PlatformAdminShell } from "./admin/platform-admin-shell";
 
 const currentTime = () => Date.now();
 
@@ -30,8 +31,11 @@ export default async function AdminLayout({
       include: { business: true },
       orderBy: { id: "asc" },
     }),
-    prisma.user.findUnique({ where: { id: session.user.id }, select: { passwordHash: true } }),
+    prisma.user.findUnique({ where: { id: session.user.id }, select: { passwordHash: true, platformRole: true } }),
   ]);
+  if (user?.platformRole === "ADMIN") {
+    return <PlatformAdminShell name={session.user.name ?? "Tomy"} email={session.user.email ?? ""}>{children}</PlatformAdminShell>;
+  }
   if (!membership || !user?.passwordHash) redirect("/onboarding");
 
   const business = membership.business;
