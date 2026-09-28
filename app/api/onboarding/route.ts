@@ -32,11 +32,28 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Falta el nombre del restaurante." }, { status: 400 });
       }
 
-      if (fullName || phone) {
+      if (fullName && fullName !== user.name) {
         await prisma.user.update({
           where: { id: user.id },
-          data: { name: fullName || user.name, phone: phone || user.phone },
+          data: { name: fullName },
         });
+      }
+
+      if (phone && phone !== user.phone) {
+        try {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { phone },
+          });
+        } catch (err) {
+          const isUniqueConstraintError =
+            err && typeof err === "object" && "code" in err && err.code === "P2002";
+          if (!isUniqueConstraintError) throw err;
+
+          console.warn("[POST /api/onboarding] phone already belongs to another account; continuing", {
+            userId: user.id,
+          });
+        }
       }
 
       const baseBusinessSlug = slugify(restaurantName) || "negocio";
