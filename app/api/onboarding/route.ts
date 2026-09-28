@@ -176,12 +176,16 @@ export async function POST(req: Request) {
 
     const ph = getPostHogClient();
     if (ph) {
-      ph.capture({
-        distinctId: user.id,
-        event: "onboarding_completed",
-        properties: { restaurant_slug: slug, plan: "trial" },
-      });
-      await ph.flush();
+      try {
+        ph.capture({
+          distinctId: user.id,
+          event: "onboarding_completed",
+          properties: { restaurant_slug: slug, plan: "trial" },
+        });
+        await ph.flush();
+      } catch (err) {
+        console.warn("[POST /api/onboarding] analytics delivery failed after onboarding completed", err);
+      }
     }
 
     return NextResponse.json({ slug: restaurant.slug }, { status: 201 });
