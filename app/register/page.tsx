@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { HiCheckCircle, HiChatBubbleLeftRight, HiEye, HiEyeSlash, HiExclamationTriangle } from "react-icons/hi2";
 import { FcGoogle } from "react-icons/fc";
 import { PhoneInput } from "react-international-phone";
@@ -144,12 +145,21 @@ export default function RegisterPage() {
           <button
             type="button"
             onClick={handleGoogleSignup}
-            disabled={googleLoading}
+            disabled={googleLoading || loading}
+            aria-busy={googleLoading}
             className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-3 font-semibold text-text-primary transition hover:bg-border/30 disabled:opacity-50"
           >
             <FcGoogle className="h-5 w-5" />
-            {googleLoading ? "Conectando..." : "Continuar con Google"}
+            {googleLoading ? "Conectando con Google…" : "Continuar con Google"}
           </button>
+          <p className="mt-2 text-center text-xs text-text-secondary">
+            Si creás una cuenta nueva con Google, después elegís una contraseña y los datos de tu local.
+          </p>
+          {googleLoading && (
+            <p role="status" aria-live="polite" className="mt-2 text-center text-sm text-text-secondary">
+              Al volver, te pediremos los datos que falten para activar tu local.
+            </p>
+          )}
 
           <div className="my-4 flex items-center gap-3">
             <span className="h-px flex-1 bg-border" />
@@ -165,6 +175,7 @@ export default function RegisterPage() {
               <input
                 id="restaurantName"
                 type="text"
+                autoComplete="organization"
                 required
                 value={restaurantName}
                 onChange={(e) => setRestaurantName(e.target.value)}
@@ -180,6 +191,7 @@ export default function RegisterPage() {
               <input
                 id="fullName"
                 type="text"
+                autoComplete="name"
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
@@ -196,6 +208,7 @@ export default function RegisterPage() {
                 defaultCountry="ar"
                 value={phone}
                 onChange={setPhone}
+                inputProps={{ autoComplete: "tel" }}
                 inputClassName="!h-11 !w-full !rounded-r-lg !border-border !bg-background !text-text-primary"
                 countrySelectorStyleProps={{
                   buttonClassName: "!h-11 !rounded-l-lg !border-border !bg-background !px-3",
@@ -210,6 +223,7 @@ export default function RegisterPage() {
               <input
                 id="email"
                 type="email"
+                autoComplete="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -247,6 +261,7 @@ export default function RegisterPage() {
                   <input
                     id="password"
                     type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -271,6 +286,7 @@ export default function RegisterPage() {
                   <input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
+                    autoComplete="new-password"
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -302,10 +318,11 @@ export default function RegisterPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || googleLoading}
+            aria-busy={loading}
             className="mt-6 w-full rounded-lg bg-primary px-4 py-3 font-semibold text-white transition hover:bg-primary-hover disabled:opacity-50"
           >
-            {loading ? "Creando cuenta..." : "Crear cuenta"}
+            {loading ? "Creando tu cuenta…" : "Crear cuenta"}
           </button>
 
           <label className="mt-4 flex items-start gap-2 text-sm text-text-secondary">
@@ -358,4 +375,3 @@ export default function RegisterPage() {
     </main>
   );
 }
-import Image from "next/image";
