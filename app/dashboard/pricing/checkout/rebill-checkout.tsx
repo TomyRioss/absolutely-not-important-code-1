@@ -90,7 +90,7 @@ export function RebillCheckout({ publicKey, planId, mode, email, name }: { publi
       checkout.planId = planId;
       checkout.language = "es";
       checkout.oneClickCheckout = false;
-      checkout.display = { successPage: false, checkoutSummary: false, submitButton: false, sandboxMode: mode === "sandbox" };
+      checkout.display = { successPage: false, checkoutSummary: false, submitButton: false };
       checkout.style.display = "block";
       checkout.style.width = "100%";
       checkout.style.maxWidth = "100%";
