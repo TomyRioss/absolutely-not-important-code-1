@@ -46,7 +46,27 @@ export async function POST(request: Request) {
     const planId = sandbox
       ? process.env.REBILL_SANDBOX_PLAN_ID?.trim()
       : process.env.REBILL_PLAN_ID?.trim();
-    if ((!subscriptionId && !paymentId) || !apiKey || !planId) return NextResponse.json({ error: "Rebill no está configurado" }, { status: 500 });
+    if (!apiKey || !planId) return NextResponse.json({ error: "Rebill no está configurado" }, { status: 500 });
+
+    // Hosted checkout returns to a fixed URL without a subscription reference.
+    // Resolve it from Rebill using the authenticated account, never a supplied email.
+    if (!subscriptionId && !paymentId) {
+      if (!session.user.email) return NextResponse.json({ error: "No se pudo identificar la cuenta" }, { status: 409 });
+      const searchResponse = await fetch("https://api.rebill.com/v3/subscriptions/search", {
+        method: "POST",
+        headers: { "x-api-key": apiKey, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filters: { customer: { email: session.user.email }, planId, status: ["active"] },
+          pagination: { limit: 1, offset: 0, sort: "created_at", order: "DESC" },
+        }),
+        cache: "no-store",
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (!searchResponse.ok) return NextResponse.json({ error: "No se pudo consultar el pago en Rebill" }, { status: 502 });
+      const search = await searchResponse.json() as { records?: { id?: string }[] };
+      subscriptionId = search.records?.[0]?.id;
+      if (!subscriptionId) return NextResponse.json({ error: "Rebill todavía no confirmó una suscripción activa para tu cuenta" }, { status: 409 });
+    }
 
     if (!subscriptionId && paymentId) {
       const paymentResponse = await fetch(`https://api.rebill.com/v3/payments/${encodeURIComponent(paymentId)}`, {
