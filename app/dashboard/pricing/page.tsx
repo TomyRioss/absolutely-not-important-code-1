@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 import { PromoCountdown } from "@/components/promo-countdown";
 import { PLAN_PRO_PRICE_ARS } from "@/lib/pricing";
-import Link from "next/link";
 
 const currentTime = () => Date.now();
 
@@ -20,9 +19,18 @@ export default async function PricingPage() {
     : null;
   const business = membership?.business;
   const rebillSandbox = process.env.REBILL_MODE?.trim() === "sandbox";
-  const rebillConfigured = rebillSandbox
-    ? Boolean(process.env.NEXT_PUBLIC_REBILL_SANDBOX_PUBLIC_KEY?.trim() && process.env.REBILL_SANDBOX_PLAN_ID?.trim() && process.env.REBILL_SANDBOX_SECRET_KEY?.trim())
-    : Boolean(process.env.NEXT_PUBLIC_REBILL_PUBLIC_KEY?.trim() && process.env.REBILL_PLAN_ID?.trim() && process.env.REBILL_SECRET_KEY?.trim());
+  const rebillPaymentLink = process.env.REBILL_PAYMENT_LINK_URL?.replace(/^\uFEFF/, "").trim();
+  let rebillConfigured = false;
+  if (rebillPaymentLink) {
+    try {
+      const rebillUrl = new URL(rebillPaymentLink);
+      rebillConfigured = rebillUrl.protocol === "https:"
+        && rebillUrl.hostname === "pay.rebill.com"
+        && (!rebillSandbox || rebillUrl.pathname.includes("platorest-sandbox"));
+    } catch {
+      rebillConfigured = false;
+    }
+  }
   const trialDaysLeft = business?.trialEndsAt
     ? Math.max(0, Math.ceil((new Date(business.trialEndsAt).getTime() - currentTime()) / 86400000))
     : null;
@@ -60,8 +68,8 @@ export default async function PricingPage() {
             <Button disabled className="mt-8 w-full" size="lg">Plan activo</Button>
           ) : (
             <>
-              {rebillConfigured ? (
-                <Button className="mt-8 w-full" size="lg" render={<Link href="/dashboard/pricing/checkout" />}>
+              {rebillConfigured && rebillPaymentLink ? (
+                <Button className="mt-8 w-full" size="lg" render={<a href={rebillPaymentLink} />}>
                   Suscribirme
                 </Button>
               ) : (
