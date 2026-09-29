@@ -45,7 +45,7 @@ function normalizeEmail(value?: string | null) {
   return value?.trim().toLowerCase() ?? "";
 }
 
-export function RebillCheckout({ publicKey, planId, email, name }: { publicKey: string; planId: string; email?: string | null; name?: string | null }) {
+export function RebillCheckout({ publicKey, planId, mode, email, name }: { publicKey: string; planId: string; mode: "production" | "sandbox"; email?: string | null; name?: string | null }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -79,15 +79,18 @@ export function RebillCheckout({ publicKey, planId, email, name }: { publicKey: 
     let cancelled = false;
     let readyTimeout: number | undefined;
 
-    void import("rebill/loader").then(({ defineCustomElements }) => {
+    void import("rebill/loader").then(async ({ defineCustomElements }) => {
       if (cancelled || !containerRef.current) return;
+      const { initializeRebillSDK } = await import("rebill/config");
+      if (cancelled) return;
+      initializeRebillSDK({ environment: "production", debug: mode === "sandbox" });
       defineCustomElements(window);
       checkout = document.createElement("rebill-checkout") as unknown as RebillCheckoutElement;
       checkout.publicKey = publicKey;
       checkout.planId = planId;
       checkout.language = "es";
       checkout.oneClickCheckout = false;
-      checkout.display = { successPage: false, checkoutSummary: false, submitButton: false };
+      checkout.display = { successPage: false, checkoutSummary: false, submitButton: false, sandboxMode: mode === "sandbox" };
       checkout.style.display = "block";
       checkout.style.width = "100%";
       checkout.style.maxWidth = "100%";
@@ -141,7 +144,7 @@ export function RebillCheckout({ publicKey, planId, email, name }: { publicKey: 
       if (readyTimeout !== undefined) window.clearTimeout(readyTimeout);
       checkout?.remove();
     };
-  }, [confirmSubscription, email, name, planId, publicKey]);
+  }, [confirmSubscription, email, mode, name, planId, publicKey]);
 
   return (
     <div className="min-h-[520px]">

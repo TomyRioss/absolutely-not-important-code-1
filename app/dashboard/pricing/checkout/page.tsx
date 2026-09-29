@@ -16,10 +16,18 @@ export default async function RebillCheckoutPage() {
         orderBy: { id: "asc" },
       })
     : null;
-  const publicKey = process.env.NEXT_PUBLIC_REBILL_PUBLIC_KEY?.trim();
-  const planId = process.env.REBILL_PLAN_ID?.trim();
+  const mode = process.env.REBILL_MODE?.trim() === "sandbox" ? "sandbox" : "production";
+  const publicKey = mode === "sandbox"
+    ? process.env.NEXT_PUBLIC_REBILL_SANDBOX_PUBLIC_KEY?.trim()
+    : process.env.NEXT_PUBLIC_REBILL_PUBLIC_KEY?.trim();
+  const planId = mode === "sandbox"
+    ? process.env.REBILL_SANDBOX_PLAN_ID?.trim()
+    : process.env.REBILL_PLAN_ID?.trim();
+  const secretKey = mode === "sandbox"
+    ? process.env.REBILL_SANDBOX_SECRET_KEY?.trim()
+    : process.env.REBILL_SECRET_KEY?.trim();
 
-  if (!session?.user?.id || !membership || !publicKey || !planId || !process.env.REBILL_SECRET_KEY?.trim()) {
+  if (!session?.user?.id || !membership || !publicKey || !planId || !secretKey) {
     return (
       <Card className="mx-auto max-w-2xl">
         <CardContent className="space-y-4 p-6">
@@ -85,7 +93,7 @@ export default async function RebillCheckoutPage() {
             <p className="text-sm text-text-secondary">Tu cuenta: {session.user.email}</p>
           </CardHeader>
           <CardContent>
-            <RebillCheckout publicKey={publicKey} planId={planId} email={session.user.email} name={session.user.name} />
+            <RebillCheckout publicKey={publicKey} planId={planId} mode={mode} email={session.user.email} name={session.user.name} />
           </CardContent>
         </Card>
       </div>

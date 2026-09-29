@@ -27,8 +27,13 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => null) as { subscriptionId?: string } | null;
     const subscriptionId = body?.subscriptionId?.trim();
-    const apiKey = process.env.REBILL_SECRET_KEY?.trim();
-    const planId = process.env.REBILL_PLAN_ID?.trim();
+    const sandbox = process.env.REBILL_MODE?.trim() === "sandbox";
+    const apiKey = sandbox
+      ? process.env.REBILL_SANDBOX_SECRET_KEY?.trim()
+      : process.env.REBILL_SECRET_KEY?.trim();
+    const planId = sandbox
+      ? process.env.REBILL_SANDBOX_PLAN_ID?.trim()
+      : process.env.REBILL_PLAN_ID?.trim();
     if (!subscriptionId || !apiKey || !planId) return NextResponse.json({ error: "Rebill no está configurado" }, { status: 500 });
 
     const membership = await prisma.membership.findFirst({

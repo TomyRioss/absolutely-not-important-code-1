@@ -29,13 +29,18 @@ function validSignature(raw: Buffer, received: string | null, secret: string) {
 export async function POST(request: Request, { params }: { params: Promise<{ secret: string }> }) {
   try {
     const { secret: pathSecret } = await params;
-    const expectedPathSecret = process.env.REBILL_WEBHOOK_PATH_SECRET?.trim();
+    const sandbox = process.env.REBILL_MODE?.trim() === "sandbox";
+    const expectedPathSecret = (sandbox
+      ? process.env.REBILL_SANDBOX_WEBHOOK_PATH_SECRET
+      : process.env.REBILL_WEBHOOK_PATH_SECRET)?.trim();
     if (!expectedPathSecret || pathSecret !== expectedPathSecret) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
 
     const raw = Buffer.from(await request.arrayBuffer());
-    const signingSecret = process.env.REBILL_WEBHOOK_SIGNING_SECRET?.trim();
+    const signingSecret = (sandbox
+      ? process.env.REBILL_SANDBOX_WEBHOOK_SIGNING_SECRET
+      : process.env.REBILL_WEBHOOK_SIGNING_SECRET)?.trim();
     if (!signingSecret || !validSignature(raw, request.headers.get("x-rebill-signature"), signingSecret)) {
       return NextResponse.json({ error: "invalid signature" }, { status: 401 });
     }
@@ -59,8 +64,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ sec
     };
     const metadataBusinessId = metadata?.platorestBusinessId?.trim();
     const subscriptionId = data?.subscriptionId ?? data?.subscription?.id ?? data?.id;
-    const configuredLink = process.env.REBILL_PAYMENT_LINK_ID?.trim();
-    const configuredPlan = process.env.REBILL_PLAN_ID?.trim();
+    const configuredLink = (sandbox
+      ? process.env.REBILL_SANDBOX_PAYMENT_LINK_ID
+      : process.env.REBILL_PAYMENT_LINK_ID)?.trim();
+    const configuredPlan = (sandbox
+      ? process.env.REBILL_SANDBOX_PLAN_ID
+      : process.env.REBILL_PLAN_ID)?.trim();
     if (!configuredLink && !configuredPlan) {
       console.error("[webhook rebill] REBILL_PAYMENT_LINK_ID o REBILL_PLAN_ID requerido");
       return NextResponse.json({ error: "webhook misconfigured" }, { status: 500 });

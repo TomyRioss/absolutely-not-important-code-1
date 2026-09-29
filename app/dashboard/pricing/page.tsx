@@ -19,7 +19,10 @@ export default async function PricingPage() {
       })
     : null;
   const business = membership?.business;
-  const rebillConfigured = Boolean(process.env.NEXT_PUBLIC_REBILL_PUBLIC_KEY?.trim() && process.env.REBILL_PLAN_ID?.trim() && process.env.REBILL_SECRET_KEY?.trim());
+  const rebillSandbox = process.env.REBILL_MODE?.trim() === "sandbox";
+  const rebillConfigured = rebillSandbox
+    ? Boolean(process.env.NEXT_PUBLIC_REBILL_SANDBOX_PUBLIC_KEY?.trim() && process.env.REBILL_SANDBOX_PLAN_ID?.trim() && process.env.REBILL_SANDBOX_SECRET_KEY?.trim())
+    : Boolean(process.env.NEXT_PUBLIC_REBILL_PUBLIC_KEY?.trim() && process.env.REBILL_PLAN_ID?.trim() && process.env.REBILL_SECRET_KEY?.trim());
   const trialDaysLeft = business?.trialEndsAt
     ? Math.max(0, Math.ceil((new Date(business.trialEndsAt).getTime() - currentTime()) / 86400000))
     : null;
