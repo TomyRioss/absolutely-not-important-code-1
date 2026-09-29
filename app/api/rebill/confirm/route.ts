@@ -19,14 +19,26 @@ function normalizeEmail(value?: string | null) {
   return value?.trim().toLowerCase() ?? "";
 }
 
+function findStringProperty(value: unknown, property: string, seen = new Set<object>()): string | undefined {
+  if (!value || typeof value !== "object" || seen.has(value)) return undefined;
+  seen.add(value);
+
+  for (const [key, nestedValue] of Object.entries(value)) {
+    if (key === property && typeof nestedValue === "string" && nestedValue.trim()) return nestedValue;
+    const found = findStringProperty(nestedValue, property, seen);
+    if (found) return found;
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const session = await auth();
     const userId = session?.user?.id;
     if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-    const body = await request.json().catch(() => null) as { subscriptionId?: string } | null;
-    const subscriptionId = body?.subscriptionId?.trim();
+    const body = await request.json().catch(() => null) as { paymentId?: string; subscriptionId?: string } | null;
+    let subscriptionId = body?.subscriptionId?.trim();
+    const paymentId = body?.paymentId?.trim();
     const sandbox = process.env.REBILL_MODE?.trim() === "sandbox";
     const apiKey = sandbox
       ? process.env.REBILL_SANDBOX_SECRET_KEY?.trim()
@@ -34,7 +46,23 @@ export async function POST(request: Request) {
     const planId = sandbox
       ? process.env.REBILL_SANDBOX_PLAN_ID?.trim()
       : process.env.REBILL_PLAN_ID?.trim();
-    if (!subscriptionId || !apiKey || !planId) return NextResponse.json({ error: "Rebill no está configurado" }, { status: 500 });
+    if ((!subscriptionId && !paymentId) || !apiKey || !planId) return NextResponse.json({ error: "Rebill no está configurado" }, { status: 500 });
+
+    if (!subscriptionId && paymentId) {
+      const paymentResponse = await fetch(`https://api.rebill.com/v3/payments/${encodeURIComponent(paymentId)}`, {
+        headers: { "x-api-key": apiKey },
+        cache: "no-store",
+      });
+      if (!paymentResponse.ok) return NextResponse.json({ error: "No se pudo validar el pago" }, { status: 502 });
+
+      const payment = await paymentResponse.json() as unknown;
+      const paymentStatus = findStringProperty(payment, "status")?.toLowerCase();
+      subscriptionId = findStringProperty(payment, "subscriptionId");
+      if (paymentStatus !== "approved") return NextResponse.json({ error: "El pago todavía no está aprobado" }, { status: 409 });
+      if (!subscriptionId) return NextResponse.json({ error: "Rebill todavía no vinculó el pago con la suscripción" }, { status: 409 });
+    }
+
+    if (!subscriptionId) return NextResponse.json({ error: "No se encontró la suscripción" }, { status: 409 });
 
     const membership = await prisma.membership.findFirst({
       where: { userId, role: "OWNER" },

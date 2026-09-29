@@ -11,34 +11,43 @@ type RebillCheckoutElement = HTMLElement & {
   display: { successPage: boolean; checkoutSummary: boolean; submitButton: boolean };
   customerInformation?: { email?: string; fullName?: string };
   submit: () => Promise<void>;
-  apmPayment?: { subscriptionId?: string | null } | null;
-  responseCheckoutCard?: { result?: { subscriptionId?: string | null } } | null;
+  apmPayment?: { id?: string; subscriptionId?: string | null } | null;
+  responseCheckoutCard?: { result?: { paymentId?: string; subscriptionId?: string | null } } | null;
 };
 
 type RebillSuccessDetail = {
+  paymentId?: string;
   subscriptionId?: string;
-  data?: { subscriptionId?: string; result?: { subscriptionId?: string; subscription?: { id?: string } } };
-  result?: { subscriptionId?: string; subscription?: { id?: string } };
+  data?: { paymentId?: string; subscriptionId?: string; result?: { paymentId?: string; subscriptionId?: string; subscription?: { id?: string } } };
+  result?: { paymentId?: string; subscriptionId?: string; subscription?: { id?: string } };
 };
 
-function findSubscriptionId(value: unknown, parentKey?: string, seen = new Set<object>()): string | undefined {
+type PaymentReference = { paymentId?: string; subscriptionId?: string };
+
+function findId(value: unknown, idKey: "paymentId" | "subscriptionId", parentKey?: string, seen = new Set<object>()): string | undefined {
   if (!value || typeof value !== "object") return undefined;
   if (seen.has(value)) return undefined;
   seen.add(value);
 
   for (const [key, nestedValue] of Object.entries(value)) {
-    if ((key === "subscriptionId" || key === "id" && parentKey === "subscription") && typeof nestedValue === "string" && nestedValue.trim()) {
+    const matchesId = key === idKey || key === "id" && parentKey === (idKey === "paymentId" ? "payment" : "subscription");
+    if (matchesId && typeof nestedValue === "string" && nestedValue.trim()) {
       return nestedValue;
     }
-    const found = findSubscriptionId(nestedValue, key, seen);
+    const found = findId(nestedValue, idKey, key, seen);
     if (found) return found;
   }
 }
 
-function getSubscriptionId(detail: RebillSuccessDetail, checkout?: RebillCheckoutElement | null) {
-  return findSubscriptionId(detail)
-    ?? findSubscriptionId(checkout?.apmPayment)
-    ?? findSubscriptionId(checkout?.responseCheckoutCard);
+function getPaymentReference(detail: RebillSuccessDetail, checkout?: RebillCheckoutElement | null): PaymentReference {
+  return {
+    subscriptionId: findId(detail, "subscriptionId")
+      ?? findId(checkout?.apmPayment, "subscriptionId")
+      ?? findId(checkout?.responseCheckoutCard, "subscriptionId"),
+    paymentId: findId(detail, "paymentId")
+      ?? checkout?.responseCheckoutCard?.result?.paymentId
+      ?? checkout?.apmPayment?.id,
+  };
 }
 
 function normalizeEmail(value?: string | null) {
@@ -54,16 +63,16 @@ export function RebillCheckout({ publicKey, planId, mode, email, name }: { publi
   const submittingRef = useRef(false);
   const paymentApprovedRef = useRef(false);
   const [paymentApproved, setPaymentApproved] = useState(false);
-  const [approvedSubscriptionId, setApprovedSubscriptionId] = useState<string | null>(null);
+  const [approvedPayment, setApprovedPayment] = useState<PaymentReference | null>(null);
   const [checkoutEmail, setCheckoutEmail] = useState(email ?? "");
   const emailMismatch = normalizeEmail(checkoutEmail) !== normalizeEmail(email);
 
-  const confirmSubscription = useCallback((subscriptionId: string) => {
+  const confirmSubscription = useCallback((payment: PaymentReference) => {
     setValidating(true);
     void fetch("/api/rebill/confirm", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subscriptionId }),
+      body: JSON.stringify(payment),
       signal: AbortSignal.timeout(20_000),
     })
       .then((response) => {
@@ -116,14 +125,14 @@ export function RebillCheckout({ publicKey, planId, mode, email, name }: { publi
         setPaymentApproved(true);
         submittingRef.current = false;
         setSubmitting(false);
-        const subscriptionId = getSubscriptionId((event as CustomEvent<RebillSuccessDetail>).detail, checkout);
-        if (!subscriptionId) {
+        const payment = getPaymentReference((event as CustomEvent<RebillSuccessDetail>).detail, checkout);
+        if (!payment.subscriptionId && !payment.paymentId) {
           setError("El pago fue recibido, pero Rebill todavía no informó la suscripción. No vuelvas a pagar; reintentá la validación en unos segundos.");
           return;
         }
 
-        setApprovedSubscriptionId(subscriptionId);
-        confirmSubscription(subscriptionId);
+        setApprovedPayment(payment);
+        confirmSubscription(payment);
       });
       checkout.addEventListener("error", () => {
         if (cancelled) return;
@@ -153,13 +162,13 @@ export function RebillCheckout({ publicKey, planId, mode, email, name }: { publi
       {!loaded && !error && <p className="mb-4 text-sm text-text-secondary">Cargando checkout seguro...</p>}
       <div ref={containerRef} className="min-h-[460px] w-full min-w-0 overflow-x-hidden" />
       {emailMismatch && <p className="mt-4 break-words rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">El correo del pago no coincide con tu cuenta. Corregilo para continuar.</p>}
-      {paymentApproved ? approvedSubscriptionId ? (
+      {paymentApproved ? approvedPayment ? (
         <Button
           className="mt-4 h-12 w-full"
           disabled={validating}
           onClick={() => {
             setError(null);
-            confirmSubscription(approvedSubscriptionId);
+            confirmSubscription(approvedPayment);
           }}
         >
           {validating ? "Validando..." : "Reintentar validación"}
@@ -170,14 +179,14 @@ export function RebillCheckout({ publicKey, planId, mode, email, name }: { publi
           disabled={validating}
           onClick={() => {
             const checkout = containerRef.current?.firstElementChild as RebillCheckoutElement | null;
-            const subscriptionId = getSubscriptionId({}, checkout);
-            if (!subscriptionId) {
+            const payment = getPaymentReference({}, checkout);
+            if (!payment.subscriptionId && !payment.paymentId) {
               setError("Rebill todavía no informó la suscripción. No vuelvas a pagar; reintentá en unos segundos.");
               return;
             }
             setError(null);
-            setApprovedSubscriptionId(subscriptionId);
-            confirmSubscription(subscriptionId);
+            setApprovedPayment(payment);
+            confirmSubscription(payment);
           }}
         >
           {validating ? "Validando..." : "Reintentar validación"}
