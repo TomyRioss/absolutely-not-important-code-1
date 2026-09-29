@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-export function PaymentReturn({ rejected }: { rejected: boolean }) {
+export function PaymentReturn({ rejected, checkout }: { rejected: boolean; checkout?: string }) {
   const router = useRouter();
   const [state, setState] = useState<"pending" | "success" | "error">(rejected ? "error" : "pending");
   const [message, setMessage] = useState(rejected ? "Rebill rechazó el pago. Revisá los datos o elegí otro medio de pago." : "");
@@ -23,7 +23,7 @@ export function PaymentReturn({ rejected }: { rejected: boolean }) {
         const response = await fetch("/api/rebill/confirm", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: "{}",
+          body: JSON.stringify({ checkout }),
           signal: AbortSignal.any([controller.signal, AbortSignal.timeout(20_000)]),
         });
         const result = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
@@ -54,7 +54,7 @@ export function PaymentReturn({ rejected }: { rejected: boolean }) {
       controller.abort();
       if (timer) clearTimeout(timer);
     };
-  }, [attempt, rejected, router, run]);
+  }, [attempt, checkout, rejected, router, run]);
 
   return (
     <Card className="mx-auto max-w-xl">

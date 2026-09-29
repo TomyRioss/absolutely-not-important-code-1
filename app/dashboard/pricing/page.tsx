@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 import { PromoCountdown } from "@/components/promo-countdown";
 import { PLAN_PRO_PRICE_ARS } from "@/lib/pricing";
+import { getRebillConfig } from "@/lib/rebill-checkout";
 
 const currentTime = () => Date.now();
 
-export default async function PricingPage() {
+export default async function PricingPage({ searchParams }: { searchParams: Promise<{ checkoutError?: string }> }) {
+  const { checkoutError } = await searchParams;
   const session = await auth();
   const membership = session?.user?.id
     ? await prisma.membership.findFirst({
@@ -18,19 +20,7 @@ export default async function PricingPage() {
       })
     : null;
   const business = membership?.business;
-  const rebillSandbox = process.env.REBILL_MODE?.trim() === "sandbox";
-  const rebillPaymentLink = process.env.REBILL_PAYMENT_LINK_URL?.replace(/^\uFEFF/, "").trim();
-  let rebillConfigured = false;
-  if (rebillPaymentLink) {
-    try {
-      const rebillUrl = new URL(rebillPaymentLink);
-      rebillConfigured = rebillUrl.protocol === "https:"
-        && rebillUrl.hostname === "pay.rebill.com"
-        && (!rebillSandbox || rebillUrl.pathname.includes("platorest-sandbox"));
-    } catch {
-      rebillConfigured = false;
-    }
-  }
+  const rebillConfigured = Boolean(getRebillConfig() && process.env.AUTH_SECRET && membership);
   const trialDaysLeft = business?.trialEndsAt
     ? Math.max(0, Math.ceil((new Date(business.trialEndsAt).getTime() - currentTime()) / 86400000))
     : null;
@@ -68,17 +58,18 @@ export default async function PricingPage() {
             <Button disabled className="mt-8 w-full" size="lg">Plan activo</Button>
           ) : (
             <>
-              {rebillConfigured && rebillPaymentLink ? (
-                <Button className="mt-8 w-full" size="lg" render={<a href={rebillPaymentLink} />}>
-                  Suscribirme
-                </Button>
+              {checkoutError === "1" && <p role="alert" className="mt-6 text-sm text-destructive">No pudimos abrir el pago en Rebill. Intentá nuevamente.</p>}
+              {rebillConfigured ? (
+                <form action="/api/rebill/checkout" method="post">
+                  <Button type="submit" className="mt-8 w-full" size="lg">Suscribirme</Button>
+                </form>
               ) : (
                 <Button disabled className="mt-8 w-full" size="lg">
                   Suscripción no disponible
                 </Button>
               )}
               <p className="mt-2 text-center text-xs text-text-secondary">
-                El pago se valida con tu cuenta actual de PlatoRest.
+                El plan se activa en esta cuenta de PlatoRest, aunque pagues con otro correo.
               </p>
             </>
           )}

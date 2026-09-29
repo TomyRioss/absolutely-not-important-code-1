@@ -1,26 +1,12 @@
-import { createHmac, timingSafeEqual } from "crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getRebillConfig, getSubscriptionBinding, rebillRequest, type RebillSubscription } from "@/lib/rebill-checkout";
 
-type RebillData = {
-  id?: string;
-  status?: string;
-  lastStatus?: string | null;
-  statusDetail?: string | null;
-  planId?: string;
-  paymentLinkId?: string;
-  subscriptionId?: string;
-  subscription?: { id?: string; status?: string; metadata?: Record<string, string> };
-  customer?: { email?: string };
-  payment?: { status?: string; metadata?: Record<string, string> };
-  metadata?: Record<string, string>;
-  paymentMetadata?: Record<string, string>;
-  subscriptionMetadata?: Record<string, string>;
-  customAttributes?: Record<string, string>;
-};
+type RebillData = { id?: string; subscriptionId?: string; subscription?: { id?: string }; payment?: { id?: string } };
 
 function validSignature(raw: Buffer, received: string | null, secret: string) {
-  if (!received) return false;
+  if (!received || !/^[a-f0-9]{64}$/i.test(received)) return false;
   const expected = createHmac("sha256", secret).update(raw).digest();
   const actual = Buffer.from(received, "hex");
   return actual.length === expected.length && timingSafeEqual(actual, expected);
@@ -30,100 +16,69 @@ export async function POST(request: Request, { params }: { params: Promise<{ sec
   try {
     const { secret: pathSecret } = await params;
     const sandbox = process.env.REBILL_MODE?.trim() === "sandbox";
-    const expectedPathSecret = (sandbox
-      ? process.env.REBILL_SANDBOX_WEBHOOK_PATH_SECRET
-      : process.env.REBILL_WEBHOOK_PATH_SECRET)?.trim();
-    if (!expectedPathSecret || pathSecret !== expectedPathSecret) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
-    }
-
+    const expectedPathSecret = (sandbox ? process.env.REBILL_SANDBOX_WEBHOOK_PATH_SECRET : process.env.REBILL_WEBHOOK_PATH_SECRET)?.trim();
+    if (!expectedPathSecret || pathSecret !== expectedPathSecret) return NextResponse.json({ error: "not found" }, { status: 404 });
     const raw = Buffer.from(await request.arrayBuffer());
-    const signingSecret = (sandbox
-      ? process.env.REBILL_SANDBOX_WEBHOOK_SIGNING_SECRET
-      : process.env.REBILL_WEBHOOK_SIGNING_SECRET)?.trim();
-    if (!signingSecret || !validSignature(raw, request.headers.get("x-rebill-signature"), signingSecret)) {
-      return NextResponse.json({ error: "invalid signature" }, { status: 401 });
+    const signingSecret = (sandbox ? process.env.REBILL_SANDBOX_WEBHOOK_SIGNING_SECRET : process.env.REBILL_WEBHOOK_SIGNING_SECRET)?.trim();
+    if (!signingSecret || !validSignature(raw, request.headers.get("x-rebill-signature"), signingSecret)) return NextResponse.json({ error: "invalid signature" }, { status: 401 });
+    let payload: { data?: RebillData; webhook?: { event?: string } } | null;
+    try { payload = JSON.parse(raw.toString("utf8")); }
+    catch { return NextResponse.json({ error: "invalid payload" }, { status: 400 }); }
+    const data = payload?.data;
+    const event = payload?.webhook?.event;
+    if (!data || !event || !["subscription.created", "subscription.updated", "payment.created", "payment.updated"].includes(event)) return NextResponse.json({ received: true });
+    const config = getRebillConfig();
+    if (!config) return NextResponse.json({ error: "webhook misconfigured" }, { status: 503 });
+    let subscriptionId = data.subscriptionId ?? data.subscription?.id ?? (event.startsWith("subscription.") ? data.id : undefined);
+    let paymentStatus: string | undefined;
+    if (event.startsWith("payment.")) {
+      const paymentId = data.payment?.id ?? data.id;
+      if (!paymentId) return NextResponse.json({ received: true });
+      const payment = await rebillRequest<{ subscriptionId?: string; status?: string }>(config, `payments/${encodeURIComponent(paymentId)}`);
+      subscriptionId = payment.subscriptionId;
+      paymentStatus = payment.status?.toLowerCase();
     }
-
-    let payload: { data?: RebillData; webhook?: { event?: string } };
-    try {
-      payload = JSON.parse(raw.toString("utf8")) as { data?: RebillData; webhook?: { event?: string } };
-    } catch {
-      return NextResponse.json({ error: "invalid payload" }, { status: 400 });
+    if (!subscriptionId) return NextResponse.json({ received: true });
+    const subscription = await rebillRequest<RebillSubscription>(config, `subscriptions/${encodeURIComponent(subscriptionId)}`);
+    const known = await prisma.business.findUnique({ where: { mpSubscriptionId: subscriptionId }, select: { id: true, plan: true } });
+    let businessId = known?.id;
+    let checkoutLinkId: string | undefined;
+    if (!businessId) {
+      const binding = await getSubscriptionBinding(config, subscription);
+      if (!binding) {
+        console.warn("[rebill webhook] unbound subscription ignored", { subscriptionId });
+        return NextResponse.json({ received: true });
+      }
+      const owner = await prisma.membership.findFirst({ where: { userId: binding.userId, businessId: binding.businessId, role: "OWNER" }, select: { businessId: true } });
+      businessId = owner?.businessId;
+      checkoutLinkId = binding.paymentLinkId;
     }
-    const data = payload.data;
-    const event = payload.webhook?.event;
-    const email = data?.customer?.email?.trim().toLowerCase();
-    const metadata = {
-      ...data?.customAttributes,
-      ...data?.metadata,
-      ...data?.payment?.metadata,
-      ...data?.paymentMetadata,
-      ...data?.subscription?.metadata,
-      ...data?.subscriptionMetadata,
-    };
-    const metadataBusinessId = metadata?.platorestBusinessId?.trim();
-    const subscriptionId = data?.subscriptionId ?? data?.subscription?.id ?? data?.id;
-    const configuredLink = (sandbox
-      ? process.env.REBILL_SANDBOX_PAYMENT_LINK_ID
-      : process.env.REBILL_PAYMENT_LINK_ID)?.trim();
-    const configuredPlan = (sandbox
-      ? process.env.REBILL_SANDBOX_PLAN_ID
-      : process.env.REBILL_PLAN_ID)?.trim();
-    if (!configuredLink && !configuredPlan) {
-      console.error("[webhook rebill] REBILL_PAYMENT_LINK_ID o REBILL_PLAN_ID requerido");
-      return NextResponse.json({ error: "webhook misconfigured" }, { status: 500 });
-    }
-    const matchesLink = Boolean(configuredLink && (data?.paymentLinkId === configuredLink || metadata.paymentLinkId === configuredLink));
-    const matchesPlan = Boolean(configuredPlan && data?.planId === configuredPlan);
-    const knownSubscription = subscriptionId
-      ? await prisma.business.findUnique({ where: { mpSubscriptionId: subscriptionId }, select: { id: true } })
-      : null;
-    if (!data || !event || !subscriptionId || (!matchesLink && !matchesPlan && !knownSubscription) || (!email && !metadataBusinessId && !knownSubscription)) {
-      console.warn("[webhook rebill] evento ignorado", {
-        event,
-        subscriptionId,
-        hasEmail: Boolean(email),
-        matchesLink,
-        matchesPlan,
-        knownSubscription: Boolean(knownSubscription),
-      });
-      return NextResponse.json({ received: true });
-    }
-
-    const businessId = metadataBusinessId ?? (email ? (await prisma.user.findFirst({
-      where: { email: { equals: email, mode: "insensitive" } },
-      select: { businessesOwned: { select: { id: true } } },
-    }))?.businessesOwned[0]?.id : undefined) ?? knownSubscription?.id;
     if (!businessId) return NextResponse.json({ received: true });
-
-    const status = (data.status ?? data.subscription?.status)?.toLowerCase();
-    const defaulted = status === "defaulted" || (status === "paused" && data.statusDetail?.toLowerCase() === "defaulted");
-    const paymentStatus = (data.payment?.status ?? data.status)?.toLowerCase();
-    const paymentRevoke = event === "payment.updated" && ["refunded", "chargeback", "charged_back"].includes(paymentStatus ?? "");
-    const revoke = defaulted || paymentRevoke || ["paused", "cancelled", "finished"].includes(status ?? "");
-    const activate = (event === "subscription.created" && status === "active") ||
-      (event === "subscription.updated" && status === "active") ||
-      ((event === "payment.created" || event === "payment.updated") && paymentStatus === "approved");
-
+    const status = subscription.status.toLowerCase();
+    const revoke = ["paused", "cancelled", "finished", "defaulted"].includes(status)
+      || (event === "payment.updated" && ["refunded", "chargeback", "charged_back"].includes(paymentStatus ?? ""));
+    const activate = status === "active" && (!event.startsWith("payment.") || paymentStatus === "approved");
     if (revoke) {
-      await prisma.business.updateMany({
-        where: { id: businessId, mpSubscriptionId: subscriptionId },
-        data: { plan: "trial" },
-      });
+      await prisma.business.updateMany({ where: { id: businessId, mpSubscriptionId: subscriptionId }, data: { plan: "trial" } });
     } else if (activate) {
-      await prisma.business.updateMany({
-        where: {
-          id: businessId,
-          OR: [{ plan: "trial" }, { mpSubscriptionId: subscriptionId }],
-        },
-        data: { plan: "pro", mpSubscriptionId: subscriptionId, proStartedAt: new Date() },
-      });
+      if (known?.plan !== "pro") {
+        const updated = await prisma.business.updateMany({
+          where: { id: businessId, OR: [{ plan: "trial" }, { mpSubscriptionId: subscriptionId }] },
+          data: { plan: "pro", mpSubscriptionId: subscriptionId, proStartedAt: new Date() },
+        });
+        if (!updated.count) {
+          console.error("[rebill webhook] subscription binding conflict", { businessId, subscriptionId });
+          return NextResponse.json({ error: "subscription binding conflict" }, { status: 409 });
+        }
+      }
+      if (checkoutLinkId) {
+        await rebillRequest(config, `payment-links/${encodeURIComponent(checkoutLinkId)}`, { method: "PATCH", body: JSON.stringify({ status: "expired" }) })
+          .catch(() => console.warn("[rebill webhook] unable to expire completed checkout"));
+      }
     }
-
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("[webhook rebill] error", error);
-    return NextResponse.json({ error: "webhook processing failed" }, { status: 500 });
+    console.error("[rebill webhook]", error instanceof Error ? error.message : "processing failed");
+    return NextResponse.json({ error: "webhook processing failed" }, { status: 502 });
   }
 }
