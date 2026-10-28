@@ -26,14 +26,14 @@ export default function CustomerLoginPage({
     try {
       const res = await customerSignIn(email, password);
       if (res?.error) {
-        setError("Email o contraseña incorrectos.");
+        setError("El email o la contrase\u00f1a no coinciden. Revisalos e intent\u00e1 otra vez. Si no la record\u00e1s, contact\u00e1 al local.");
         return;
       }
       router.push(`/menu/${restaurantSlug}`);
       router.refresh();
     } catch (err) {
       console.error("[customer login] failed", err);
-      setError("Error al iniciar sesión. Intentá de nuevo.");
+      setError("No pudimos conectar para iniciar sesi\u00f3n. Revis\u00e1 tu conexi\u00f3n e intent\u00e1 otra vez.");
     } finally {
       setLoading(false);
     }
@@ -96,9 +96,9 @@ export default function CustomerLoginPage({
         </div>
 
         {error && (
-          <p className="mt-4 text-sm text-danger" role="alert">
+          <div className="mt-4 rounded-lg border border-danger/30 bg-danger/5 px-3 py-2.5 text-sm text-danger" role="alert" aria-live="assertive">
             {error}
-          </p>
+          </div>
         )}
 
         <button

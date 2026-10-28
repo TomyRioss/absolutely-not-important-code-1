@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { customerSignIn } from "@/lib/customer-session-client";
 import { HiEye, HiEyeSlash, HiArrowLeft } from "react-icons/hi2";
 
+type RegisterError = { message: string; canSignIn: boolean };
+
 export default function CustomerRegisterPage({
   params,
 }: {
@@ -18,17 +20,18 @@ export default function CustomerRegisterPage({
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<RegisterError | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
+      setError({ message: "La contraseña debe tener al menos 6 caracteres.", canSignIn: false });
       return;
     }
     setLoading(true);
+    let accountCreated = false;
     try {
       const res = await fetch("/api/customer/register", {
         method: "POST",
@@ -37,22 +40,37 @@ export default function CustomerRegisterPage({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(data?.error ?? "No se pudo crear la cuenta.");
+        setError({
+          message: data?.error ?? "No pudimos crear la cuenta. Revisá los datos e intentá otra vez.",
+          canSignIn: data?.code !== "ACCOUNT_WITHOUT_PASSWORD" && (res.status === 401 || res.status === 409),
+        });
+        return;
       }
 
+      accountCreated = true;
       const signInRes = await customerSignIn(email, password);
-      if (signInRes?.error) throw new Error("No pudimos iniciar sesión. Probá ingresar manualmente.");
+      if (signInRes?.error) {
+        setError({
+          message: "La cuenta ya se creó, pero no pudimos iniciar sesión. Entrá con el email y la contraseña que acabás de registrar.",
+          canSignIn: true,
+        });
+        return;
+      }
 
       router.push(`/menu/${restaurantSlug}`);
       router.refresh();
     } catch (err) {
       console.error("[customer register] failed", err);
-      setError(err instanceof Error ? err.message : "No pudimos crear tu cuenta. Intentá de nuevo.");
+      setError({
+        message: accountCreated
+          ? "La cuenta ya se creó, pero no pudimos iniciar sesión. Entrá con el email y la contraseña que acabás de registrar."
+          : "No pudimos confirmar el registro. Probá iniciar sesión con estos datos antes de volver a crear la cuenta.",
+        canSignIn: true,
+      });
     } finally {
       setLoading(false);
     }
   }
-
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
       <Link
@@ -143,9 +161,17 @@ export default function CustomerRegisterPage({
         </div>
 
         {error && (
-          <p className="mt-4 text-sm text-danger" role="alert">
-            {error}
-          </p>
+          <div className="mt-4 rounded-lg border border-danger/30 bg-danger/5 px-3 py-2.5" role="alert" aria-live="assertive">
+            <p className="text-sm font-medium text-danger">{error.message}</p>
+            {error.canSignIn && (
+              <Link
+                href={`/menu/${restaurantSlug}/account/login`}
+                className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-danger underline underline-offset-2"
+              >
+                Ir a iniciar sesión
+              </Link>
+            )}
+          </div>
         )}
 
         <button
