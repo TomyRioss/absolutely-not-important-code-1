@@ -25,9 +25,9 @@ function escapeHtml(value: string) {
 
 export async function sendNewOrderEmail(order: NewOrderEmail) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM_EMAIL;
+  const fromEmail = process.env.RESEND_FROM_EMAIL;
 
-  if (!apiKey || !from) {
+  if (!apiKey || !fromEmail) {
     console.warn(
       `[order-email] Email not sent for order ${order.orderId}: configure RESEND_API_KEY and RESEND_FROM_EMAIL.`,
     );
@@ -123,7 +123,7 @@ export async function sendNewOrderEmail(order: NewOrderEmail) {
     `;
 
     const { error } = await resend.emails.send({
-      from,
+      from: `Platorest <${fromEmail}>`,
       to: [order.ownerEmail],
       subject,
       text,
