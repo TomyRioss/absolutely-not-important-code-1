@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BrandLogo } from "@/components/brand-logo";
 
 export const metadata: Metadata = {
   title: "Política de privacidad | PlatoRest",
@@ -20,8 +21,8 @@ export default function PrivacidadPage() {
   return (
     <main className="min-h-screen bg-surface px-6 py-16 md:py-24">
       <article className="mx-auto max-w-3xl rounded-2xl border border-border bg-background p-6 shadow-sm md:p-10">
-        <Link href="/" className="text-sm font-semibold text-primary hover:underline">
-          PlatoRest
+        <Link href="/" className="inline-flex">
+          <BrandLogo className="h-11 w-auto rounded-sm" />
         </Link>
         <h1 className="mt-8 text-3xl font-bold text-text-primary md:text-4xl">Política de privacidad</h1>
         <p className="mt-3 text-sm text-text-secondary">Última actualización: 24/09/2026</p>

@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
-  ArrowDownRight,
   ArrowUpRight,
   Building2,
   CircleDollarSign,
@@ -192,6 +191,10 @@ export function PlatformOverview({ initialSnapshot }: { initialSnapshot: Platfor
 }
 
 function Overview({ snapshot, exchangeRate }: { snapshot: PlatformSnapshot; exchangeRate: ExchangeRate | null }) {
+  const trialBusinesses = snapshot.businesses.filter((business) => business.plan === "trial");
+  const snapshotTime = new Date(snapshot.generatedAt).getTime();
+  const activeTrials = trialBusinesses.filter((business) => business.trialEndsAt && new Date(business.trialEndsAt).getTime() > snapshotTime).length;
+
   return (
     <>
       <section aria-label="Indicadores de plataforma" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -200,7 +203,7 @@ function Overview({ snapshot, exchangeRate }: { snapshot: PlatformSnapshot; exch
         <Metric icon={Store} label="Restaurantes" value={snapshot.metrics.restaurants.toLocaleString("es-AR")} />
         <Metric icon={CircleDollarSign} label="Ingreso mensual estimado (MRR)" value={<MoneyValue amount={snapshot.metrics.monthlyRecurringRevenue} rate={exchangeRate} />} detail={`${snapshot.metrics.activePlans} planes Pro`} />
         <Metric icon={ArrowUpRight} label="Ingreso anual estimado (ARR)" value={<MoneyValue amount={snapshot.metrics.annualRecurringRevenue} rate={exchangeRate} />} />
-        <Metric icon={ArrowDownRight} label="Bajas" value="Sin datos" detail="Todavía no se registran bajas" />
+        <Metric icon={Clock3} label="Cuentas trial" value={trialBusinesses.length.toLocaleString("es-AR")} detail={`${activeTrials.toLocaleString("es-AR")} vigentes`} />
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.85fr)]">

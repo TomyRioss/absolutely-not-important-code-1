@@ -7,6 +7,7 @@ import { SidebarNav } from "./sidebar-nav";
 import { QrDownloadButton } from "./qr-download-button";
 import { Separator } from "@/components/ui/separator";
 import type { OnboardingProgress } from "@/lib/onboarding";
+import { BrandLogo } from "@/components/brand-logo";
 
 type MobileNavProps = {
   menuUrl: string;
@@ -58,7 +59,7 @@ export function MobileNav({ menuUrl, slug, isPro, trialDaysLeft, onboarding }: M
           }`}
         >
           <div className="flex items-center justify-between px-4 pb-2">
-            <span className="text-2xl font-medium text-white">PlatoRest</span>
+            <BrandLogo className="h-11 w-auto brightness-0 invert" />
             <button
               type="button"
               onClick={() => setOpen(false)}

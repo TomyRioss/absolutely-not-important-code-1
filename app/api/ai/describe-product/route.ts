@@ -5,14 +5,14 @@ export async function POST(req: Request) {
   if (!name) return NextResponse.json({ error: "Falta el nombre del producto" }, { status: 400 });
 
   try {
-    const res = await fetch("https://api.deepseek.com/chat/completions", {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "deepseek-v4-flash",
+        model: "deepseek/deepseek-v4.1-flash",
         messages: [
           {
             role: "system",
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
     if (!res.ok) {
       const errText = await res.text();
-      console.error("[describe-product] deepseek error", res.status, errText);
+      console.error("[describe-product] OpenRouter error", res.status, errText);
       return NextResponse.json({ error: "No se pudo generar la descripción" }, { status: 502 });
     }
 

@@ -7,6 +7,7 @@ import Image from "next/image";
 import { HiCheckCircle, HiChatBubbleLeftRight, HiEye, HiEyeSlash, HiExclamationTriangle } from "react-icons/hi2";
 import { FcGoogle } from "react-icons/fc";
 import { PhoneInput } from "react-international-phone";
+import { BrandLogo } from "@/components/brand-logo";
 import "react-international-phone/style.css";
 import { signIn, signOut } from "next-auth/react";
 import posthog from "posthog-js";
@@ -112,9 +113,9 @@ export default function RegisterPage() {
 
   return (
     <main className="flex min-h-screen">
-      <div className="relative flex w-full items-center justify-center bg-background px-6 pb-12 pt-24 md:w-[60%] md:py-12">
+      <div className="relative flex w-full items-start justify-center bg-background px-6 pb-12 pt-24 md:items-center md:px-10 md:pt-24 lg:items-start lg:w-[60%]">
         <Link href="/" className="absolute left-6 top-6 z-10 text-2xl font-bold text-primary md:left-8 md:top-8 md:text-3xl">
-          PlatoRest
+          <BrandLogo className="h-12 w-auto max-w-[38vw] rounded-sm md:h-14 md:max-w-none" />
         </Link>
 
         <a
@@ -128,19 +129,10 @@ export default function RegisterPage() {
           <span className="text-sm font-semibold text-text-primary">Soporte</span>
         </a>
 
-        <form onSubmit={handleSubmit} className="w-full max-w-lg">
+        <form onSubmit={handleSubmit} className="w-full max-w-2xl lg:max-w-lg">
           <h1 className="text-2xl font-bold leading-tight text-text-primary md:text-3xl">
-            Registrate en PlatoRest y empezá a recibir pedidos en minutos
+            Empezá a recibir pedidos en minutos
           </h1>
-
-          <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 md:hidden">
-            {BENEFITS.slice(0, 3).map((benefit) => (
-              <li key={benefit} className="flex items-center gap-1.5 text-xs font-medium text-text-secondary">
-                <HiCheckCircle className="h-3.5 w-3.5 flex-shrink-0 text-primary" />
-                <span>{benefit}</span>
-              </li>
-            ))}
-          </ul>
 
           <button
             type="button"
@@ -152,9 +144,6 @@ export default function RegisterPage() {
             <FcGoogle className="h-5 w-5" />
             {googleLoading ? "Conectando con Google…" : "Continuar con Google"}
           </button>
-          <p className="mt-2 text-center text-xs text-text-secondary">
-            Si creás una cuenta nueva con Google, después elegís una contraseña y los datos de tu local.
-          </p>
           {googleLoading && (
             <p role="status" aria-live="polite" className="mt-2 text-center text-sm text-text-secondary">
               Al volver, te pediremos los datos que falten para activar tu local.
@@ -168,23 +157,23 @@ export default function RegisterPage() {
           </div>
 
           <div className="space-y-2.5">
-            <div>
-              <label htmlFor="restaurantName" className="mb-1 block text-sm font-medium text-text-primary">
-                Nombre del restaurante
-              </label>
-              <input
-                id="restaurantName"
-                type="text"
-                autoComplete="organization"
-                required
+            <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 md:gap-3 lg:grid-cols-1">
+                <div>
+                  <label htmlFor="restaurantName" className="mb-1 block text-sm font-medium text-text-primary">
+                    Nombre del restaurante
+                  </label>
+                  <input
+                    id="restaurantName"
+                    type="text"
+                    autoComplete="organization"
+                    required
                 value={restaurantName}
                 onChange={(e) => setRestaurantName(e.target.value)}
                 placeholder="La Parrilla de Juan"
                 className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-text-primary outline-none transition focus:border-primary"
               />
-            </div>
-
-            <div>
+              </div>
+              <div>
               <label htmlFor="fullName" className="mb-1 block text-sm font-medium text-text-primary">
                 Nombre completo
               </label>
@@ -198,9 +187,11 @@ export default function RegisterPage() {
                 placeholder="Juan Pérez"
                 className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-text-primary outline-none transition focus:border-primary"
               />
+              </div>
             </div>
 
-            <div>
+            <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 md:gap-3 lg:grid-cols-1">
+              <div>
               <label htmlFor="phone" className="mb-1 block text-sm font-medium text-text-primary">
                 Número de WhatsApp
               </label>
@@ -214,9 +205,8 @@ export default function RegisterPage() {
                   buttonClassName: "!h-11 !rounded-l-lg !border-border !bg-background !px-3",
                 }}
               />
-            </div>
-
-            <div>
+              </div>
+              <div>
               <label htmlFor="email" className="mb-1 block text-sm font-medium text-text-primary">
                 Email
               </label>
@@ -230,6 +220,7 @@ export default function RegisterPage() {
                 placeholder="juan@restaurante.com"
                 className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-text-primary outline-none transition focus:border-primary"
               />
+              </div>
             </div>
 
             <div>
@@ -354,7 +345,7 @@ export default function RegisterPage() {
         </form>
       </div>
 
-      <div className="relative hidden md:block md:w-[40%]">
+      <div className="relative hidden lg:block lg:w-[40%]">
         <Image
           src="https://images.pexels.com/photos/2696064/pexels-photo-2696064.jpeg?auto=compress&cs=tinysrgb&w=1200"
           alt="Chef preparando plato"

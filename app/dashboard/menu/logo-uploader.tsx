@@ -65,11 +65,11 @@ export function LogoUploader({
       <button
         type="button"
         onClick={() => fileInputRef.current?.click()}
-        className="group absolute inset-0 z-0 flex cursor-pointer items-center justify-center rounded-lg text-white transition hover:bg-black/35 focus-visible:bg-black/35 focus-visible:outline-none"
+        className="group absolute inset-0 z-0 flex cursor-pointer items-center justify-center rounded-lg bg-black/0 text-white transition hover:bg-black/35 focus-visible:bg-black/35 focus-visible:outline-none"
         aria-label="Subir logo"
       >
-        <span className="flex items-center gap-1.5 rounded-lg bg-black/55 px-2.5 py-1.5 text-xs font-medium opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
-          <Upload className="h-3.5 w-3.5" />
+        <span className="flex items-center gap-2 rounded-lg bg-black/55 px-3 py-2 text-sm font-medium opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
+          <Upload className="h-4 w-4" />
           Subir logo
         </span>
       </button>
