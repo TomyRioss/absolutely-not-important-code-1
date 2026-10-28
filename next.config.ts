@@ -24,6 +24,7 @@ const nextConfig: NextConfig = {
   },
   skipTrailingSlashRedirect: true,
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
