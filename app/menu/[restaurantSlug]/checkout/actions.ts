@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { geocodeAddress, haversineKm } from "@/lib/geo";
 import { getPostHogClient } from "@/lib/posthog-server";
+import { sendNewOrderEmail } from "@/lib/order-email";
 
 export type CheckoutInput = {
   restaurantSlug: string;
@@ -30,7 +31,14 @@ export async function createOrder(
 ): Promise<CheckoutResult> {
   const restaurant = await prisma.restaurant.findUnique({
     where: { slug: input.restaurantSlug },
-    include: { business: { include: { socialLinks: { where: { platform: "WHATSAPP" } } } } },
+    include: {
+      business: {
+        include: {
+          owner: { select: { email: true } },
+          socialLinks: { where: { platform: "WHATSAPP" } },
+        },
+      },
+    },
   });
   if (!restaurant) return { ok: false, error: "Restaurante no encontrado." };
 
@@ -125,6 +133,14 @@ export async function createOrder(
         }),
       },
     },
+  });
+
+  await sendNewOrderEmail({
+    orderId: order.id,
+    restaurantName: restaurant.name,
+    ownerEmail: restaurant.business.owner.email,
+    customerName: input.customerName,
+    total,
   });
 
   const ph = getPostHogClient();

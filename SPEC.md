@@ -77,3 +77,4 @@ B2|2026-09-27|Rebill form dispatch resolves before APM result; QR failures omit 
 B3|2026-09-28|platform snapshot passes Prisma Decimal variant price across Server/Client boundary|convert variant price to number; see V11
 B4|2026-10-28|customer account register omitted phone required by API|send phone; see V12
 B5|2026-10-28|imported menu Image fill lacked relative thumbnail frame|add relative to bounded frame; see V13
+B6|2026-10-28|loyalty registration recreated a customer already created by a menu order, violating unique businessId+phone|link the existing customer to the new account transactionally; return 409 for phone conflicts

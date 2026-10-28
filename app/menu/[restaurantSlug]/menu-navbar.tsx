@@ -14,6 +14,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
+type RegisterError = { message: string; canSignIn: boolean; email?: string };
+
 function getInitials(name?: string | null) {
   if (!name) return "?";
   const parts = name.trim().split(/\s+/);
@@ -45,7 +47,7 @@ export function MenuNavbar({
   const [regPhone, setRegPhone] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [regShowPassword, setRegShowPassword] = useState(false);
-  const [regError, setRegError] = useState<string | null>(null);
+  const [regError, setRegError] = useState<RegisterError | null>(null);
   const [regLoading, setRegLoading] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -56,7 +58,7 @@ export function MenuNavbar({
     try {
       const res = await customerSignIn(email, password);
       if (res?.error) {
-        setLoginError("Email o contraseña incorrectos.");
+        setLoginError("El email o la contrase\u00f1a no coinciden. Revisalos e intent\u00e1 otra vez. Si no la record\u00e1s, contact\u00e1 al local.");
         return;
       }
       setAuthModalOpen(false);
@@ -73,10 +75,11 @@ export function MenuNavbar({
     e.preventDefault();
     setRegError(null);
     if (regPassword.length < 6) {
-      setRegError("La contraseña debe tener al menos 6 caracteres.");
+      setRegError({ message: "La contraseña debe tener al menos 6 caracteres.", canSignIn: false });
       return;
     }
     setRegLoading(true);
+    let accountCreated = false;
     try {
       const res = await fetch("/api/customer/register", {
         method: "POST",
@@ -91,28 +94,40 @@ export function MenuNavbar({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        if (res.status === 409) {
-          setEmail(regEmail);
-          setAuthView("default");
-          setLoginError(data?.error ?? "Ya sos cliente de este local. Iniciá sesión.");
-          return;
-        }
-        throw new Error(data?.error ?? "No se pudo crear la cuenta.");
+        setRegError({
+          message: data?.error ?? "No pudimos crear la cuenta. Revisá los datos e intentá otra vez.",
+          canSignIn: data?.code !== "ACCOUNT_WITHOUT_PASSWORD" && (res.status === 401 || res.status === 409),
+          email: res.status === 401 || data?.code === "ALREADY_CUSTOMER" ? regEmail : undefined,
+        });
+        return;
       }
 
+      accountCreated = true;
       const signInRes = await customerSignIn(regEmail, regPassword);
-      if (signInRes?.error) throw new Error("No pudimos iniciar sesión. Probá ingresar manualmente.");
+      if (signInRes?.error) {
+        setRegError({
+          message: "La cuenta ya se creó, pero no pudimos iniciar sesión. Entrá con el email y la contraseña que acabás de registrar.",
+          canSignIn: true,
+          email: regEmail,
+        });
+        return;
+      }
 
       setAuthModalOpen(false);
       router.refresh();
     } catch (err) {
       console.error("[menu navbar] register failed", err);
-      setRegError(err instanceof Error ? err.message : "No pudimos crear tu cuenta. Intentá de nuevo.");
+      setRegError({
+        message: accountCreated
+          ? "La cuenta ya se creó, pero no pudimos iniciar sesión. Entrá con el email y la contraseña que acabás de registrar."
+          : "No pudimos confirmar el registro. Probá iniciar sesión con estos datos antes de volver a crear la cuenta.",
+        canSignIn: true,
+        email: regEmail,
+      });
     } finally {
       setRegLoading(false);
     }
   }
-
   function closeAuthModal(open: boolean) {
     setAuthModalOpen(open);
     if (!open) {
@@ -192,9 +207,9 @@ export function MenuNavbar({
                 </div>
 
                 {loginError && (
-                  <p className="text-xs text-danger" role="alert">
+                  <div className="rounded-lg border border-danger/30 bg-danger/5 px-3 py-2.5 text-sm text-danger" role="alert" aria-live="assertive">
                     {loginError}
-                  </p>
+                  </div>
                 )}
 
                 <button
@@ -269,9 +284,27 @@ export function MenuNavbar({
                 </div>
 
                 {regError && (
-                  <p className="text-xs text-danger" role="alert">
-                    {regError}
-                  </p>
+                  <div className="rounded-lg border border-danger/30 bg-danger/5 px-3 py-2.5" role="alert" aria-live="assertive">
+                    <p className="text-sm font-medium text-danger">{regError.message}</p>
+                    {regError.canSignIn && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEmail(regError.email ?? "");
+                          setLoginError(
+                            regError.email
+                              ? "Ingresá la contraseña de esta cuenta."
+                              : "Ingresá con el email y la contraseña de la cuenta que ya existe.",
+                          );
+                          setAuthView("default");
+                          setRegError(null);
+                        }}
+                        className="mt-2 min-h-11 text-left text-sm font-semibold text-danger underline underline-offset-2"
+                      >
+                        Ir a iniciar sesión
+                      </button>
+                    )}
+                  </div>
                 )}
 
                 <button
