@@ -161,6 +161,7 @@ export default async function MenuPage({
                 alt={restaurant.name}
                 width={112}
                 height={112}
+                unoptimized
                 className="h-20 w-20 shrink-0 rounded-xl object-cover md:h-28 md:w-28"
               />
             ) : (

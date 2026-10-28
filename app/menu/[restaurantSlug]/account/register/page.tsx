@@ -15,6 +15,7 @@ export default function CustomerRegisterPage({
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +33,7 @@ export default function CustomerRegisterPage({
       const res = await fetch("/api/customer/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, restaurantSlug }),
+        body: JSON.stringify({ name, email, phone, password, restaurantSlug }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
@@ -93,6 +94,24 @@ export default function CustomerRegisterPage({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tu@email.com"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-text-primary outline-none transition focus:border-primary"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="phone" className="mb-1 block text-sm font-medium text-text-primary">
+              Teléfono
+            </label>
+            <input
+              id="phone"
+              type="tel"
+              required
+              inputMode="numeric"
+              pattern="[0-9]{10,15}"
+              title="Código de país + área + número, sin espacios ni signos (ej: 5491134083140)"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+              placeholder="5491122334455"
               className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-text-primary outline-none transition focus:border-primary"
             />
           </div>

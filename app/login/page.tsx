@@ -5,8 +5,14 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn, signOut } from "next-auth/react";
 import posthog from "posthog-js";
-import { HiCheckCircle, HiChatBubbleLeftRight, HiEye, HiEyeSlash } from "react-icons/hi2";
+import {
+  HiCheckCircle,
+  HiChatBubbleLeftRight,
+  HiEye,
+  HiEyeSlash,
+} from "react-icons/hi2";
 import { FcGoogle } from "react-icons/fc";
+import { BrandLogo } from "@/components/brand-logo";
 
 const BENEFITS = [
   "Crea tu menú digital en segundos",
@@ -40,7 +46,9 @@ function LoginForm() {
     posthog.capture("user_logged_in_google");
     try {
       await signOut({ redirect: false });
-      await signIn("google", { callbackUrl: searchParams.get("callbackUrl") ?? "/dashboard" });
+      await signIn("google", {
+        callbackUrl: searchParams.get("callbackUrl") ?? "/dashboard",
+      });
     } catch (err) {
       console.error("[login] google signin failed", err);
       setError("No pudimos conectar con Google. Intentá de nuevo.");
@@ -65,7 +73,12 @@ function LoginForm() {
         return;
       }
       posthog.capture("user_logged_in", { method: "credentials" });
-      router.push(searchParams.get("callbackUrl") ?? (email.toLowerCase().trim() === "tomy@gmail.com" ? "/dashboard/admin" : "/dashboard"));
+      router.push(
+        searchParams.get("callbackUrl") ??
+          (email.toLowerCase().trim() === "tomy@gmail.com"
+            ? "/dashboard/admin"
+            : "/dashboard"),
+      );
       router.refresh();
     } catch (err) {
       console.error("login error:", err);
@@ -77,12 +90,12 @@ function LoginForm() {
 
   return (
     <main className="flex min-h-screen">
-      <div className="relative flex w-full items-center justify-center bg-background px-6 pb-12 pt-24 md:w-[60%] md:py-12">
+      <div className="relative flex w-full items-start justify-center bg-background px-6 pb-12 pt-24 md:px-10 md:pt-24 md:w-[60%]">
         <Link
           href="/"
           className="absolute left-6 top-6 z-10 text-2xl font-bold text-primary md:left-8 md:top-8 md:text-3xl"
         >
-          PlatoRest
+          <BrandLogo className="h-12 w-auto max-w-[38vw] rounded-sm md:h-14 md:max-w-none" />
         </Link>
 
         <div className="absolute right-6 top-6 z-10 flex items-center gap-3 md:right-8 md:top-8 md:gap-4">
@@ -93,10 +106,14 @@ function LoginForm() {
             className="flex items-center gap-2"
           >
             <HiChatBubbleLeftRight className="h-5 w-5 text-text-primary" />
-            <span className="hidden text-sm font-semibold text-text-primary sm:inline">Soporte</span>
+            <span className="hidden text-sm font-semibold text-text-primary sm:inline">
+              Soporte
+            </span>
           </a>
           <span className="hidden h-6 w-px bg-border md:block" />
-          <span className="hidden text-sm text-text-secondary md:inline">¿No tenés cuenta?</span>
+          <span className="hidden text-sm text-text-secondary md:inline">
+            ¿No tenés cuenta?
+          </span>
           <Link
             href="/register"
             className="rounded-lg border-2 border-primary px-3 py-1.5 text-sm font-semibold text-primary transition hover:bg-primary hover:text-white md:px-4"
@@ -107,7 +124,7 @@ function LoginForm() {
 
         <form onSubmit={handleSubmit} className="w-full max-w-2xl">
           <h1 className="text-3xl font-bold leading-tight text-text-primary">
-            Bienvenido de vuelta a PlatoRest
+            Iniciá sesión
           </h1>
           <p className="mt-3 text-sm text-text-secondary">
             Ingresá a tu cuenta para gestionar tu restaurante.
@@ -169,9 +186,15 @@ function LoginForm() {
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary"
-                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  aria-label={
+                    showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                  }
                 >
-                  {showPassword ? <HiEyeSlash className="h-5 w-5" /> : <HiEye className="h-5 w-5" />}
+                  {showPassword ? (
+                    <HiEyeSlash className="h-5 w-5" />
+                  ) : (
+                    <HiEye className="h-5 w-5" />
+                  )}
                 </button>
               </div>
             </div>

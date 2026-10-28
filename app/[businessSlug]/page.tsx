@@ -45,6 +45,7 @@ export default async function BusinessLinkPage({
               alt={business.name}
               width={112}
               height={112}
+              unoptimized
               className="relative z-10 h-28 w-28 rounded-2xl object-cover shadow-sm md:h-40 md:w-40"
             />
           ) : (

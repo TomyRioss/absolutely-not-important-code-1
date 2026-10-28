@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default function NotFound() {
   return (
@@ -11,7 +12,7 @@ export default function NotFound() {
         href="/"
         className="absolute left-6 top-6 text-2xl font-bold tracking-tight text-primary md:left-10 md:top-8"
       >
-        PlatoRest
+        <BrandLogo className="h-12 w-auto rounded-sm" />
       </Link>
 
       <section className="relative z-10 w-full max-w-2xl text-center md:text-left">
@@ -19,12 +20,15 @@ export default function NotFound() {
           404
         </p>
         <div className="mt-8 max-w-lg md:ml-[18%]">
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-primary">Página no encontrada</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-primary">
+            Página no encontrada
+          </p>
           <h1 className="mt-4 text-4xl font-bold tracking-tight text-text-primary md:text-6xl">
             Este plato no está en el menú.
           </h1>
           <p className="mt-5 text-base leading-7 text-text-secondary">
-            El enlace que buscás no existe o fue movido. Volvé al inicio y seguí explorando PlatoRest.
+            El enlace que buscás no existe o fue movido. Volvé al inicio y seguí
+            explorando PlatoRest.
           </p>
           <Link
             href="/"

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default function TopNavBar() {
   const [open, setOpen] = useState(false);
@@ -9,8 +10,8 @@ export default function TopNavBar() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background">
       <div className="mx-auto grid max-w-6xl grid-cols-2 items-center px-6 py-4 md:grid-cols-[1fr_auto_1fr]">
-        <Link href="/" className="flex items-center gap-1.5 text-3xl font-medium tracking-normal text-primary">
-          PlatoRest
+        <Link href="/" className="flex items-center gap-1.5">
+          <BrandLogo className="h-12 w-auto rounded-sm" />
         </Link>
 
         <div className="hidden items-center justify-end gap-3 md:col-start-3 md:flex">

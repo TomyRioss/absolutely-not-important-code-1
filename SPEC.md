@@ -52,6 +52,8 @@ V9: any secret/hash value in .env* files containing literal `$` must escape it a
 V10: Rebill checkout invalid form submit → release host loading state & show recovery guidance
 V11: server data passed to Client Components contains only serializable values; convert Prisma Decimal to number/string
 V12: Rebill activation requires API proof of active configured plan; checkout with no ID waits for authenticated active status
+V13: ∀ /api/customer/register caller → sends name,email,phone,password,restaurantSlug
+V14: ∀ next/image fill in thumbnail → positioned relative to bounded image frame
 
 ## §T Tasks
 id|status|desc|cites
@@ -66,6 +68,8 @@ T8|x|Inventory /admin/inventario: stock CRUD, low-stock alert, auto-decrement on
 T9|x|Customers/loyalty /admin/clientes: customer by phone/email, points on purchase, order history|V5
 T10|x|Orders panel /admin/pedidos: list/status updates across POS+WEB source|I.routes
 T11|x|Deploy config for Vercel (env, build)|§C
+T12|x|Add required phone to customer account registration|V13
+T13|x|Constrain imported menu image to thumbnail frame|V14
 
 ## §B Bugs
 id|date|cause|fix
@@ -73,3 +77,5 @@ B1|2026-07-06|Next.js env loader (dotenv-expand) treats `$` in .env values as va
 B2|2026-09-27|Rebill validation blocks submit without success/error event; host loader stays active|formChange invalid → release loader; see V10
 B3|2026-09-28|platform snapshot passes Prisma Decimal variant price across Server/Client boundary|convert variant price to number; see V11
 B4|2026-09-28|Rebill success lacked client IDs and webhook matcher discarded the event|verify through Rebill API, then wait for authenticated activation status; see V12
+B5|2026-10-28|customer account register omitted phone required by API|send phone; see V13
+B6|2026-10-28|imported menu Image fill lacked relative thumbnail frame|add relative to bounded frame; see V14

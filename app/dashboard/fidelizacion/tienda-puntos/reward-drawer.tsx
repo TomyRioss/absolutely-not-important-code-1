@@ -621,7 +621,7 @@ export function RewardDrawer({
                       onClick={() => applyImportedProduct(product)}
                       className="flex w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-surface"
                     >
-                      <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-background">
+                      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-background">
                         {product.imageUrl && <Image src={product.imageUrl} alt="" fill unoptimized className="object-cover" />}
                       </div>
                       <div className="min-w-0 flex-1">

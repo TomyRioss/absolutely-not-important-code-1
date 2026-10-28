@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { BrandLogo } from "@/components/brand-logo";
 import { PhoneInput } from "react-international-phone";
 import "react-international-phone/style.css";
 import { HiArrowRight, HiEye, HiEyeSlash } from "react-icons/hi2";
@@ -35,7 +36,9 @@ export default function OnboardingForm({
   const [pwLoading, setPwLoading] = useState(false);
 
   const [address, setAddress] = useState("");
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
   const [error, setError] = useState("");
   const finishingRef = useRef(false);
   const [finishing, setFinishing] = useState(false);
@@ -45,7 +48,9 @@ export default function OnboardingForm({
     : step === 0
       ? 1
       : step === 1
-        ? (hasPassword ? 1 : 2)
+        ? hasPassword
+          ? 1
+          : 2
         : totalSteps;
 
   async function handlePasswordSubmit(e: React.FormEvent) {
@@ -77,7 +82,11 @@ export default function OnboardingForm({
       setStep(skipContact ? 2 : 1);
     } catch (err) {
       console.error("[onboarding] set password failed", err);
-      setPwError(err instanceof Error ? err.message : "No se pudo guardar la contraseña.");
+      setPwError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo guardar la contraseña.",
+      );
     } finally {
       setPwLoading(false);
     }
@@ -97,12 +106,22 @@ export default function OnboardingForm({
       const res = await fetch("/api/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, lat: coords?.lat, lng: coords?.lng, fullName, phone, restaurantName }),
+        body: JSON.stringify({
+          address,
+          lat: coords?.lat,
+          lng: coords?.lng,
+          fullName,
+          phone,
+          restaurantName,
+        }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         console.error("[onboarding] finish failed", data);
-        setError(data.error || "No se pudo guardar la dirección. Podés completarla después.");
+        setError(
+          data.error ||
+            "No se pudo guardar la dirección. Podés completarla después.",
+        );
         return;
       }
       router.push("/dashboard");
@@ -116,14 +135,16 @@ export default function OnboardingForm({
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center bg-surface px-6 py-16">
-      <span className="absolute left-6 top-6 text-3xl font-bold text-primary md:left-8 md:top-8">
-        PLATOREST
-      </span>
+    <main className="flex min-h-screen flex-col bg-surface px-6 py-6">
+      <div className="mx-auto w-full max-w-3xl">
+        <BrandLogo className="h-12 w-auto max-w-[42vw] rounded-sm md:h-14 md:max-w-none" />
+      </div>
 
-      <div className="w-full max-w-lg text-left">
+      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center py-8 text-left">
         <div className="mb-3">
-          <p className="text-sm font-medium text-text-secondary">Paso {currentStep} de {totalSteps}</p>
+          <p className="text-sm font-medium text-text-secondary">
+            Paso {currentStep} de {totalSteps}
+          </p>
           <div
             className="mt-2 h-1.5 overflow-hidden rounded-full bg-border"
             role="progressbar"
@@ -132,11 +153,18 @@ export default function OnboardingForm({
             aria-valuemax={totalSteps}
             aria-valuenow={currentStep}
           >
-            <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${(currentStep / totalSteps) * 100}%` }} />
+            <div
+              className="h-full rounded-full bg-primary transition-[width]"
+              style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+            />
           </div>
         </div>
         <h1 className="text-3xl font-bold text-text-primary">
-          {step === 0 ? "Creá una contraseña" : step === 1 ? "Ingresa tus datos faltantes" : "Dirección del local"}
+          {step === 0
+            ? "Creá una contraseña"
+            : step === 1
+              ? "Ingresa tus datos faltantes"
+              : "Dirección del local"}
         </h1>
         <p className="mt-2 text-text-secondary">
           {step === 0
@@ -174,9 +202,15 @@ export default function OnboardingForm({
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary"
-                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    aria-label={
+                      showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                    }
                   >
-                    {showPassword ? <HiEyeSlash className="h-5 w-5" /> : <HiEye className="h-5 w-5" />}
+                    {showPassword ? (
+                      <HiEyeSlash className="h-5 w-5" />
+                    ) : (
+                      <HiEye className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
 
@@ -202,14 +236,26 @@ export default function OnboardingForm({
                     type="button"
                     onClick={() => setShowConfirmPassword((v) => !v)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary"
-                    aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    aria-label={
+                      showConfirmPassword
+                        ? "Ocultar contraseña"
+                        : "Mostrar contraseña"
+                    }
                   >
-                    {showConfirmPassword ? <HiEyeSlash className="h-5 w-5" /> : <HiEye className="h-5 w-5" />}
+                    {showConfirmPassword ? (
+                      <HiEyeSlash className="h-5 w-5" />
+                    ) : (
+                      <HiEye className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
               </div>
 
-              {pwError && <p className="mt-3 text-sm font-medium text-red-600">{pwError}</p>}
+              {pwError && (
+                <p className="mt-3 text-sm font-medium text-red-600">
+                  {pwError}
+                </p>
+              )}
             </div>
 
             <div className="mt-4 flex items-center justify-end">
@@ -278,7 +324,8 @@ export default function OnboardingForm({
                       onChange={setPhone}
                       inputClassName="!h-12 !w-full !rounded-r-lg !border-border !text-text-primary"
                       countrySelectorStyleProps={{
-                        buttonClassName: "!h-12 !rounded-l-lg !border-border !px-3",
+                        buttonClassName:
+                          "!h-12 !rounded-l-lg !border-border !px-3",
                       }}
                     />
                   </div>
@@ -314,16 +361,24 @@ export default function OnboardingForm({
             </div>
 
             {error && (
-              <p role="alert" className="mt-3 text-sm font-medium text-red-600">{error}</p>
+              <p role="alert" className="mt-3 text-sm font-medium text-red-600">
+                {error}
+              </p>
             )}
 
             <p className="mt-3 text-sm text-text-secondary">
-              Al continuar, terminamos el registro y creamos tu local con un menú inicial. La dirección es opcional y podés agregarla después.
+              Al continuar, terminamos el registro y creamos tu local con un
+              menú inicial. La dirección es opcional y podés agregarla después.
             </p>
 
             {finishing && (
-              <p role="status" aria-live="polite" className="mt-3 text-sm font-medium text-text-primary">
-                Estamos terminando tu registro y preparando el menú. No cierres esta página.
+              <p
+                role="status"
+                aria-live="polite"
+                className="mt-3 text-sm font-medium text-text-primary"
+              >
+                Estamos terminando tu registro y preparando el menú. No cierres
+                esta página.
               </p>
             )}
 

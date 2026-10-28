@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FaInstagram, FaFacebookF, FaWhatsapp } from "react-icons/fa6";
 import { SITE } from "@/lib/seo";
+import { BrandLogo } from "@/components/brand-logo";
 
 const FOOTER_SECTIONS = [
   {
@@ -30,8 +31,8 @@ export default function Footer() {
       <div className="mx-auto max-w-6xl px-6 py-16">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           <div>
-            <Link href="/" className="text-2xl font-bold tracking-tight text-primary">
-              PlatoRest
+            <Link href="/" className="inline-flex">
+              <BrandLogo className="h-12 w-auto rounded-sm" />
             </Link>
             <p className="mt-3 text-sm text-text-secondary">
               Menú digital con QR y sistema gastronómico todo-en-uno para restaurantes en Buenos Aires y toda Argentina.
